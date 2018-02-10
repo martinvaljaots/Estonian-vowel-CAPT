@@ -22,7 +22,7 @@
 */
 
 
-package vowelcapt.necessary;
+package vowelcapt.panels;
 
 import be.tarsos.dsp.util.PitchConverter;
 import be.tarsos.dsp.util.fft.FFT;

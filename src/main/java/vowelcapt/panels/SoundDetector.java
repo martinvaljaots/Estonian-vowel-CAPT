@@ -22,36 +22,7 @@
 */
 
 
-package vowelcapt.necessary;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.Mixer;
-import javax.sound.sampled.TargetDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSlider;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+package vowelcapt.panels;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
@@ -59,31 +30,45 @@ import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.SilenceDetector;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 
-public class SoundDetector extends JFrame implements AudioProcessor {
+import javax.sound.sampled.*;
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SoundDetector extends JPanel implements AudioProcessor {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3501426880288136245L;
 
-	private final JTextArea textArea;
+	public JTextArea textArea;
 	ArrayList<Clip> clipList;
 	int counter;
-	double threshold;
+	public double threshold = -80;
 	AudioDispatcher dispatcher;
 	Mixer currentMixer;
-	private final GaphPanel graphPanel;
-	SilenceDetector silenceDetector;
+	public final GaphPanel graphPanel;
+	JVMAudioInputStream audioInputStream;
+	public SilenceDetector silenceDetector;
 	
 
-	public SoundDetector() {
+	public SoundDetector(JSlider thresholdSlider) {
 		this.setLayout(new BorderLayout());
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setTitle("Sound Detector");
-		this.threshold = SilenceDetector.DEFAULT_SILENCE_THRESHOLD;
+		// this.threshold = SilenceDetector.DEFAULT_SILENCE_THRESHOLD;
+		//this.silenceDetector = new SilenceDetector(threshold, false);
+        setSilenceDetector(new SilenceDetector(threshold, false));
 		
-		JPanel inputPanel = new InputPanel();
-		//add(inputPanel);
+		// JPanel inputPanel = new InputPanel();
+		// add(inputPanel);
+		/*
 		inputPanel.addPropertyChangeListener("mixer",
 				new PropertyChangeListener() {
 					@Override
@@ -99,9 +84,8 @@ public class SoundDetector extends JFrame implements AudioProcessor {
 						}
 					}
 				});
-		
-				
-		JSlider thresholdSlider = initialzeThresholdSlider();		
+		*/
+
 		JPanel params = new JPanel(new BorderLayout());
 		params.setBorder(new TitledBorder("2. Set the algorithm parameters"));
 		
@@ -111,7 +95,7 @@ public class SoundDetector extends JFrame implements AudioProcessor {
 		params.add(thresholdSlider,BorderLayout.CENTER);
 		
 		JPanel inputAndParamsPanel = new JPanel(new BorderLayout());
-		inputAndParamsPanel.add(inputPanel,BorderLayout.NORTH);
+		//inputAndParamsPanel.add(inputPanel,BorderLayout.NORTH);
 		inputAndParamsPanel.add(params,BorderLayout.SOUTH);
 
 		
@@ -129,13 +113,13 @@ public class SoundDetector extends JFrame implements AudioProcessor {
 		add(graphPanel,BorderLayout.CENTER);
 	}
 	
-	private static class GaphPanel extends JPanel{
+	public static final class GaphPanel extends JPanel{
 
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = 5969781241442094359L;
-		private double threshold;
+		public double threshold = -50;
 		private double maxLevel = -1000;
 		private long currentModulo = System.currentTimeMillis()/15000;
 		private List<Double> levels;
@@ -211,7 +195,7 @@ public class SoundDetector extends JFrame implements AudioProcessor {
 	}
 	
 	
-
+/*
 	private JSlider initialzeThresholdSlider() {
 		JSlider thresholdSlider = new JSlider(-120,0);
 		thresholdSlider.setValue((int)threshold);
@@ -255,24 +239,24 @@ public class SoundDetector extends JFrame implements AudioProcessor {
 		
 		textArea.append("Started listening with " + Shared.toLocalString(mixer.getMixerInfo().getName()) + "\n\tparams: " + threshold + "dB\n");
 
-		final AudioFormat format = new AudioFormat(sampleRate, 16, 1, true,
+		AudioFormat format = new AudioFormat(sampleRate, 16, 1, true,
 				true);
-		final DataLine.Info dataLineInfo = new DataLine.Info(
+		DataLine.Info dataLineInfo = new DataLine.Info(
 				TargetDataLine.class, format);
 		TargetDataLine line;
 		line = (TargetDataLine) mixer.getLine(dataLineInfo);
-		final int numberOfSamples = bufferSize;
+		int numberOfSamples = bufferSize;
 		line.open(format, numberOfSamples);
 		line.start();
-		final AudioInputStream stream = new AudioInputStream(line);
+		AudioInputStream stream = new AudioInputStream(line);
 
 		JVMAudioInputStream audioStream = new JVMAudioInputStream(stream);
 		// create a new dispatcher
-		dispatcher = new AudioDispatcher(audioStream, bufferSize,
+		dispatcher = new AudioDispatcher(this.audioInputStream, bufferSize,
 				overlap);
 
 		// add a processor, handle percussion event.
-		silenceDetector = new SilenceDetector(threshold,false);
+		// silenceDetector = new SilenceDetector(threshold,false);
 		dispatcher.addAudioProcessor(silenceDetector);
 		dispatcher.addAudioProcessor(this);
 
@@ -280,6 +264,7 @@ public class SoundDetector extends JFrame implements AudioProcessor {
 		new Thread(dispatcher,"Audio dispatching").start();
 	}
 
+	/*
 	public static void main(String... strings) throws InterruptedException,
 			InvocationTargetException {
 		SwingUtilities.invokeAndWait(new Runnable() {
@@ -292,6 +277,7 @@ public class SoundDetector extends JFrame implements AudioProcessor {
 			}
 		});
 	}
+	*/
 
 	@Override
 	public boolean process(AudioEvent audioEvent) {
@@ -311,6 +297,12 @@ public class SoundDetector extends JFrame implements AudioProcessor {
 		
 	}
 
-	
+	public void setSilenceDetector(SilenceDetector silenceDetectorNew) {
+	    silenceDetector = silenceDetectorNew;
+    }
 
+    public void setThreshold(double threshold) {
+        this.threshold = threshold;
+        this.graphPanel.setThresholdLevel(this.threshold);
+    }
 }

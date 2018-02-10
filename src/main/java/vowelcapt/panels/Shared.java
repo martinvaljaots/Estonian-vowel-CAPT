@@ -22,7 +22,7 @@
 */
 
 
-package vowelcapt.necessary;
+package vowelcapt.panels;
 
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Mixer.Info;

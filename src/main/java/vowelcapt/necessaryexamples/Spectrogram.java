@@ -22,7 +22,7 @@
 */
 
 
-package vowelcapt.necessary;
+package vowelcapt.necessaryexamples;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;

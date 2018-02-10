@@ -22,7 +22,7 @@
 */
 
 
-package vowelcapt.necessary;
+package vowelcapt.necessaryexamples;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
