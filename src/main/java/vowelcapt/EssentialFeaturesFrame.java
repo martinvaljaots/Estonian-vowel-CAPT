@@ -12,8 +12,12 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 public class EssentialFeaturesFrame extends JFrame {
@@ -29,12 +33,35 @@ public class EssentialFeaturesFrame extends JFrame {
     PitchDetectorExample pitchDetector;
     Spectrogram spectrogram;
     AudioProcessor fftProcessor;
+    Capture audioCapture;
     public double pitch;
+    private boolean isRecording = false;
+
+    ByteArrayOutputStream out;
 
 
     public EssentialFeaturesFrame() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setTitle("Essential features");
+        audioCapture = new Capture();
+        final JButton capture = new JButton("Lindista");
+
+        ActionListener captureListener =
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        if(isRecording == false) {
+                            isRecording = true;
+                            capture.setText("Lindistamine...");
+                        } else {
+                            capture.setText("Lindista");
+                            isRecording = false;
+                        }
+                        //captureAudio();
+                    }
+                };
+        capture.addActionListener(captureListener);
+        add(capture, BorderLayout.LINE_START);
+
         JPanel inputPanel = new InputPanel();
         add(inputPanel, BorderLayout.NORTH);
         inputPanel.addPropertyChangeListener("mixer",
@@ -50,7 +77,7 @@ public class EssentialFeaturesFrame extends JFrame {
                     }
                 });
 
-        
+
         fftProcessor = new AudioProcessor(){
 
             FFT fft = new FFT(bufferSize);
@@ -75,20 +102,6 @@ public class EssentialFeaturesFrame extends JFrame {
 
         };
 
-        /*
-        final AudioFormat format = new AudioFormat(sampleRate, 16, 1, true,
-                true);
-        final DataLine.Info dataLineInfo = new DataLine.Info(
-                TargetDataLine.class, format);
-        TargetDataLine line;
-        line = (TargetDataLine) mixer.getLine(dataLineInfo);
-        final int numberOfSamples = bufferSize;
-        line.open(format, numberOfSamples);
-        line.start();
-        final AudioInputStream stream = new AudioInputStream(line);
-
-        JVMAudioInputStream audioStream = new JVMAudioInputStream(stream);
-        */
         soundDetector = new SoundDetector(initialzeThresholdSlider());
         add(soundDetector, BorderLayout.EAST);
         //add(new Spectrogram(null, inputPanel), BorderLayout.WEST);
@@ -146,6 +159,30 @@ public class EssentialFeaturesFrame extends JFrame {
         AudioInputStream stream = new AudioInputStream(line);
 
         JVMAudioInputStream audioStream = new JVMAudioInputStream(stream);
+        Runnable runner = new Runnable() {
+            int bufferSize = (int)format.getSampleRate()
+                    * format.getFrameSize();
+            byte buffer[] = new byte[bufferSize];
+
+            public void run() {
+                out = new ByteArrayOutputStream();
+                try {
+                    while (isRecording) {
+                        System.out.println("RECORDING AUDIO");
+                        int count =
+                                line.read(buffer, 0, buffer.length);
+                        if (count > 0) {
+                            out.write(buffer, 0, count);
+                        }
+                    }
+                    out.close();
+                } catch (IOException e) {
+                    System.err.println("I/O problems: " + e);
+                    System.exit(-1);
+                }
+            }
+        };
+        runner.run();
         // create a new dispatcher
         dispatcher = new AudioDispatcher(audioStream, bufferSize,
                 overlap);

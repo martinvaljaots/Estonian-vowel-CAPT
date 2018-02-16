@@ -66,38 +66,11 @@ public class Spectrogram extends JPanel implements PitchDetectionHandler {
 	private int overlap = 768 * 4 ;
 	
 	private String fileName;
-	
-	/*
-	private ActionListener algoChangeListener = new ActionListener(){
-		@Override
-		public void actionPerformed(final ActionEvent e) {
-			String name = e.getActionCommand();
-			PitchEstimationAlgorithm newAlgo = PitchEstimationAlgorithm.valueOf(name);
-			algo = newAlgo;
-			try {
-				setNewMixer(currentMixer);
-			} catch (LineUnavailableException e1) {
-				e1.printStackTrace();
-			} catch (UnsupportedAudioFileException e1) {
-				e1.printStackTrace();
-			}
-	}};
-	*/
+
 	public Spectrogram(){
 		this.setLayout(new BorderLayout());
 		panel = new SpectrogramPanel();
 		algo = PitchEstimationAlgorithm.YIN;
-		
-		// JPanel pitchDetectionPanel = new PitchDetectionPanel(algoChangeListener);
-		
-		// JPanel inputPanel = new InputPanel();
-	
-
-		/*
-		JPanel containerPanel = new JPanel(new GridLayout(1,0));
-		containerPanel.add(pitchDetectionPanel);
-		this.add(containerPanel,BorderLayout.NORTH);
-		*/
 		JPanel otherContainer = new JPanel(new GridLayout(1, 0));
 		otherContainer.add(panel,BorderLayout.CENTER);
 		otherContainer.setBorder(new TitledBorder("3. Utter a sound (whistling works best)"));
@@ -159,26 +132,4 @@ public class Spectrogram extends JPanel implements PitchDetectionHandler {
 		}
 		
 	}
-
-	/*
-	public static void main(final String... strings) throws InterruptedException,
-			InvocationTargetException {
-		SwingUtilities.invokeAndWait(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					UIManager.setLookAndFeel(UIManager
-							.getSystemLookAndFeelClassName());
-				} catch (Exception e) {
-					// ignore failure to set default look en feel;
-				}
-				JFrame frame = strings.length == 0 ? new Spectrogram(null) : new Spectrogram(strings[0]) ;
-				frame.pack();
-				frame.setSize(640, 480);
-				frame.setVisible(true);
-			}
-		});
-}
-	
-*/
 }
