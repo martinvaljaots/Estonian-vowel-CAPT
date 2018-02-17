@@ -4,7 +4,6 @@ import be.tarsos.dsp.*;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.util.fft.FFT;
-import de.fau.cs.jstk.framed.LPCSpectrum;
 import vowelcapt.panels.*;
 
 import javax.sound.sampled.*;
@@ -28,14 +27,14 @@ public class EssentialFeaturesFrame extends JFrame {
     Mixer currentMixer;
     SoundDetector soundDetector;
     AudioDispatcher dispatcher;
-    double threshold = -60;
+    double threshold = -80;
     SilenceDetector silenceDetector;
     PitchDetectorExample pitchDetector;
     Spectrogram spectrogram;
     AudioProcessor fftProcessor;
     Capture audioCapture;
     public double pitch;
-    private boolean isRecording = false;
+    private static boolean isRecording = false;
 
     ByteArrayOutputStream out;
 
@@ -49,12 +48,17 @@ public class EssentialFeaturesFrame extends JFrame {
         ActionListener captureListener =
                 new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        if(isRecording == false) {
-                            isRecording = true;
+                        if(!IsRecording.get()) {
+                            IsRecording.set(true);
                             capture.setText("Lindistamine...");
                         } else {
+                            try {
+                                setNewMixer(currentMixer);
+                            } catch (LineUnavailableException e1) {
+                                e1.printStackTrace();
+                            }
+                            IsRecording.set(false);
                             capture.setText("Lindista");
-                            isRecording = false;
                         }
                         //captureAudio();
                     }
@@ -159,30 +163,7 @@ public class EssentialFeaturesFrame extends JFrame {
         AudioInputStream stream = new AudioInputStream(line);
 
         JVMAudioInputStream audioStream = new JVMAudioInputStream(stream);
-        Runnable runner = new Runnable() {
-            int bufferSize = (int)format.getSampleRate()
-                    * format.getFrameSize();
-            byte buffer[] = new byte[bufferSize];
-
-            public void run() {
-                out = new ByteArrayOutputStream();
-                try {
-                    while (isRecording) {
-                        System.out.println("RECORDING AUDIO");
-                        int count =
-                                line.read(buffer, 0, buffer.length);
-                        if (count > 0) {
-                            out.write(buffer, 0, count);
-                        }
-                    }
-                    out.close();
-                } catch (IOException e) {
-                    System.err.println("I/O problems: " + e);
-                    System.exit(-1);
-                }
-            }
-        };
-        runner.run();
+        System.out.println("HEY");
         // create a new dispatcher
         dispatcher = new AudioDispatcher(audioStream, bufferSize,
                 overlap);
@@ -196,10 +177,13 @@ public class EssentialFeaturesFrame extends JFrame {
         dispatcher.addAudioProcessor(new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.YIN, sampleRate, bufferSize, spectrogram));
         dispatcher.addAudioProcessor(fftProcessor);
         soundDetector.setThreshold(threshold);
+        dispatcher.addAudioProcessor(new Recorder(line, format));
         dispatcher.addAudioProcessor(soundDetector);
 
         // run the dispatcher (on a new thread).
         new Thread(dispatcher,"Audio dispatching").start();
+       // handleRecording(format, line);
+        System.out.println("YES DONE");
     }
 
     public static void main(String... strings) throws InterruptedException,
@@ -218,5 +202,35 @@ public class EssentialFeaturesFrame extends JFrame {
             }
         });
 
+    }
+
+
+    public void handleRecording(AudioFormat format, TargetDataLine line) {
+        Runnable runner = new Runnable() {
+            int bufferSize = (int)format.getSampleRate()
+                    * format.getFrameSize();
+            byte buffer[] = new byte[bufferSize];
+
+            public void run() {
+                System.out.println("HEEEEEDSAE");
+                out = new ByteArrayOutputStream();
+                System.out.println(IsRecording.get());
+                try {
+                    while (IsRecording.get()) {
+                        System.out.println("RECORDING AUDIO");
+                        int count =
+                                line.read(buffer, 0, buffer.length);
+                        if (count > 0) {
+                            out.write(buffer, 0, count);
+                        }
+                    }
+                    out.close();
+                } catch (IOException e) {
+                    System.err.println("I/O problems: " + e);
+                    System.exit(-1);
+                }
+            }
+        };
+        runner.run();
     }
 }

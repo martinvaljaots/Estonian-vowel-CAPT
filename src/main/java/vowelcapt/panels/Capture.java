@@ -6,7 +6,7 @@ import java.awt.event.*;
 import java.io.*;
 import javax.sound.sampled.*;
 
-public class Capture extends JPanel {
+public class Capture extends JFrame {
 
     protected boolean running;
     ByteArrayOutputStream out;
@@ -58,6 +58,7 @@ public class Capture extends JPanel {
                 };
         play.addActionListener(playListener);
         content.add(play, BorderLayout.LINE_END);
+        add(content);
     }
 
     private void captureAudio() {
@@ -157,10 +158,10 @@ public class Capture extends JPanel {
     }
 
     public static void main(String args[]) {
-        /*
+
         JFrame frame = new Capture();
         frame.pack();
         frame.show();
-    */
+
     }
 }

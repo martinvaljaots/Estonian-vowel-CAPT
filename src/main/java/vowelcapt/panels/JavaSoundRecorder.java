@@ -12,7 +12,7 @@ public class JavaSoundRecorder {
     static final long RECORD_TIME = 60000;  // 1 minute
 
     // path of the wav file
-    File wavFile = new File("E:/Test/RecordAudio.wav");
+    File wavFile = new File("C:/Test/RecordAudio.wav");
 
     // format of audio file
     AudioFileFormat.Type fileType = AudioFileFormat.Type.WAVE;
