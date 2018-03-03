@@ -1,13 +1,11 @@
 package vowelcapt;
 
-import be.tarsos.dsp.resample.SoundTouchRateTransposer;
 import de.fau.cs.jstk.exceptions.MalformedParameterStringException;
 import de.fau.cs.jstk.framed.*;
 import de.fau.cs.jstk.io.FrameOutputStream;
 import de.fau.cs.jstk.sampled.AudioFileReader;
 import de.fau.cs.jstk.sampled.AudioSource;
 import de.fau.cs.jstk.sampled.RawAudioFormat;
-import vowelcapt.panels.Spectrogram;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
@@ -17,7 +15,7 @@ public class Main {
     public static void main(String[] args) {
 
 
-        String[] trial = new String[]{"Record-i.wav", "3"};
+        String[] trial = new String[]{"AK/Record-e.wav", "3"};
         try {
             AudioSource as = new AudioFileReader(trial[0],
                     RawAudioFormat.create(trial.length > 2 ? trial[1] : "f:" + trial[0]),
