@@ -1,13 +1,11 @@
 package vowelcapt.views;
 
-import be.tarsos.dsp.resample.SoundTouchRateTransposer;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -19,9 +17,9 @@ import java.io.*;
 public class SampleLesson extends Application {
 
     private final Button recordButton = new Button("Record");
+    private final Button playBackButton = new Button ("Play back");
     private ByteArrayOutputStream out;
-    private TextArea formantInfo = new TextArea();
-    AudioInputStream ais;
+    private Label formantInfo = new Label();
 
     @Override
     public void start(Stage primaryStage) {
@@ -37,16 +35,25 @@ public class SampleLesson extends Application {
         Label word = new Label("sada");
         grid.add(word, 1, 0);
 
+        grid.add(formantInfo, 0, 2);
+
         HBox hbRecordButton = new HBox(15);
         hbRecordButton.setAlignment(Pos.BOTTOM_RIGHT);
         hbRecordButton.getChildren().add(recordButton);
         grid.add(hbRecordButton, 0, 1);
 
+        HBox hbPlayBackButton = new HBox(15);
+        hbPlayBackButton.setAlignment(Pos.BOTTOM_RIGHT);
+        hbPlayBackButton.getChildren().add(playBackButton);
+        grid.add(hbPlayBackButton, 1, 1);
+
+        playBackButton.setDisable(true);
 
         recordButton.setOnAction(e -> {
             if (!IsRecording.get()) {
                 IsRecording.set(true);
-                recordButton.setText("Recording...");
+                playBackButton.setDisable(true);
+                recordButton.setText("Stop recording");
                 final AudioFormat format = getAudioFormat();
                 DataLine.Info info = new DataLine.Info(
                         TargetDataLine.class, format);
@@ -103,13 +110,61 @@ public class SampleLesson extends Application {
                 }
             } else {
                 IsRecording.set(false);
-                formantInfo.setText("NUTT");
+                formantInfo.setText("Recording stopped.");
                 recordButton.setText("Record");
+                playBackButton.setDisable(false);
             }
         });
 
+        playBackButton.setOnAction(e -> {
+            recordButton.setDisable(true);
+            try {
+                byte audio[] = out.toByteArray();
+                InputStream input =
+                        new ByteArrayInputStream(audio);
+                final AudioFormat format = getAudioFormat();
+                final AudioInputStream ais =
+                        new AudioInputStream(input, format,
+                                audio.length / format.getFrameSize());
+                DataLine.Info info = new DataLine.Info(
+                        SourceDataLine.class, format);
+                final SourceDataLine line = (SourceDataLine)
+                        AudioSystem.getLine(info);
+                line.open(format);
+                line.start();
 
-        Scene scene = new Scene(grid, 400, 300);
+                Runnable runner = new Runnable() {
+                    int bufferSize = (int) format.getSampleRate()
+                            * format.getFrameSize();
+                    byte buffer[] = new byte[bufferSize];
+
+                    public void run() {
+                        try {
+                            int count;
+                            while ((count = ais.read(
+                                    buffer, 0, buffer.length)) != -1) {
+                                if (count > 0) {
+                                    line.write(buffer, 0, count);
+                                }
+                            }
+                            line.drain();
+                            line.close();
+                            recordButton.setDisable(false);
+                        } catch (IOException e) {
+                            System.err.println("I/O problems: " + e);
+                            System.exit(-3);
+                        }
+                    }
+                };
+                Thread playThread = new Thread(runner);
+                playThread.start();
+            } catch (LineUnavailableException l) {
+                System.err.println("Line unavailable: " + l);
+                System.exit(-4);
+            }
+        });
+
+        Scene scene = new Scene(grid);
         primaryStage.setTitle("EstonianVowelCAPT");
         primaryStage.setScene(scene);
         primaryStage.show();
