@@ -33,17 +33,12 @@ public class Main {
             System.out.println(fs);
             double[] buf = new double[fs.getFrameSize()];
             FrameOutputStream fos = new FrameOutputStream(buf.length);
-// TODO: leida, mis värk on sellega, et teine ja kolmas formant pole ÜLDSE usutavate väärtustega
 
             while (fs.read(buf)) {
                 System.out.println(Arrays.toString(buf));
             }
 
-        } catch (UnsupportedAudioFileException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (MalformedParameterStringException e) {
+        } catch (UnsupportedAudioFileException | IOException | MalformedParameterStringException e) {
             e.printStackTrace();
         }
 
