@@ -2,19 +2,19 @@ package vowelcapt.views;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
+import be.tarsos.dsp.SilenceDetector;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import de.fau.cs.jstk.exceptions.MalformedParameterStringException;
 import de.fau.cs.jstk.framed.*;
-import de.fau.cs.jstk.io.FrameOutputStream;
 import de.fau.cs.jstk.sampled.AudioFileReader;
 import de.fau.cs.jstk.sampled.AudioSource;
 import de.fau.cs.jstk.sampled.RawAudioFormat;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
+import javafx.embed.swing.SwingNode;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -22,21 +22,33 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
+import vowelcapt.helpers.GraphPanel;
+import vowelcapt.helpers.HasPitchBeenDetected;
 import vowelcapt.helpers.IsRecording;
+import vowelcapt.helpers.SilenceDetectorCurrentSPL;
 
 import javax.sound.sampled.*;
 import java.io.*;
 import java.util.Arrays;
 
+
+// TODO: find a way to minimize CPU usage - something is overusing it
+// this probably means that some process isn't finishing when it's supposed to
 public class SampleLesson extends Application implements PitchDetectionHandler {
 
     private final Button recordButton = new Button("Record");
     private final Button playBackButton = new Button ("Play back");
+    private final Button listenButton = new Button("Listen");
+    private final GraphPanel graphPanel = new GraphPanel(-80);
     private ByteArrayOutputStream out;
+    private ByteArrayOutputStream vowelOut;
     private Label formantInfo = new Label();
     private static String formants = "";
+    private SilenceDetector silenceDetector = new SilenceDetector();
 
     @Override
     public void start(Stage primaryStage) {
@@ -63,6 +75,31 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         hbPlayBackButton.setAlignment(Pos.BOTTOM_RIGHT);
         hbPlayBackButton.getChildren().add(playBackButton);
         grid.add(hbPlayBackButton, 1, 1);
+
+        HBox hbListenButton = new HBox(15);
+        hbListenButton.setAlignment(Pos.BOTTOM_RIGHT);
+        hbListenButton.getChildren().add(listenButton);
+        grid.add(hbListenButton, 3, 0);
+
+        graphPanel.setSize(80, 100);
+        final SwingNode swingNode = new SwingNode();
+        swingNode.setContent(graphPanel);
+
+        Pane pane = new Pane();
+        pane.getChildren().add(swingNode);
+        grid.add(pane, 4, 5);
+
+        listenButton.setOnAction(e -> {
+            recordButton.setDisable(true);
+            listenButton.setDisable(true);
+            String bip = "C:/Test/sada.wav";
+            Media hit = new Media(new File(bip).toURI().toString());
+            MediaPlayer mediaPlayer = new MediaPlayer(hit);
+            mediaPlayer.play();
+
+            recordButton.setDisable(false);
+            listenButton.setDisable(false);
+        });
 
         playBackButton.setDisable(true);
 
@@ -92,6 +129,8 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                     // add a processor
                     dispatcher.addAudioProcessor(new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.YIN,
                             44100, 1024, this));
+                    //dispatcher.addAudioProcessor(new SoundLevelMonitor());
+                    dispatcher.addAudioProcessor(silenceDetector);
 
                     new Thread(dispatcher,"Audio dispatching").start();
 
@@ -101,14 +140,21 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                         byte buffer[] = new byte[bufferSize];
 
                         public void run() {
-                            System.out.println(bufferSize);
+                            //System.out.println(bufferSize);
                             out = new ByteArrayOutputStream();
+                            vowelOut = new ByteArrayOutputStream();
                             while (IsRecording.get()) {
-                                System.out.println("yes, recording");
+                                //System.out.println("yes, recording");
                                 int count =
                                         line.read(buffer, 0, buffer.length);
                                 if (count > 0) {
                                     out.write(buffer, 0, count);
+                                    //System.out.println(silenceDetector.currentSPL() + " in-class");
+                                    //System.out.println(SilenceDetectorCurrentSPL.get() + " atomic double");
+                                    if (SilenceDetectorCurrentSPL.get() > -70 && HasPitchBeenDetected.get()) {
+                                        //System.out.println("yes, detecting \"vowel\"");
+                                        vowelOut.write(buffer, 0, count);
+                                    }
                                 }
                             }
 
@@ -124,14 +170,21 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                             InputStream input =
                                     new ByteArrayInputStream(audio);
                             final AudioInputStream ais = new AudioInputStream(input, format, audio.length / format.getFrameSize());
+
+                            //Formants
+                            byte vowelAudio[] = vowelOut.toByteArray();
+                            InputStream vowelInput =
+                                    new ByteArrayInputStream(vowelAudio);
+                            final AudioInputStream aisVowel = new AudioInputStream(vowelInput, format, vowelAudio.length / format.getFrameSize());
                             try {
-                                AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File("C:/Test/RecordAudio3.wav"));
+                                AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File("AK/RecordAudio3.wav"));
+                                AudioSystem.write(aisVowel, AudioFileFormat.Type.WAVE, new File("AK/VowelPartTrial.wav"));
                                 ais.close();
+                                aisVowel.close();
                             } catch (IOException e1) {
                                 e1.printStackTrace();
                             }
                             findFormants();
-                            System.out.println("Supposedly done");
                         }
                     };
                     Thread captureThread = new Thread(runner);
@@ -144,7 +197,7 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                 formantInfo.setText("Recording stopped.");
                 recordButton.setText("Record");
                 playBackButton.setDisable(false);
-                formantInfo.setText(formants);
+                //formantInfo.setText(formants);
             }
         });
 
@@ -207,7 +260,7 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
     }
 
     private void findFormants() {
-        String[] trial = new String[]{"C:/Test/RecordAudio3.wav", "3"};
+        String[] trial = new String[]{"AK/VowelPartTrial.wav", "3"};
         try {
             AudioSource as = new AudioFileReader(trial[0],
                     RawAudioFormat.create(trial.length > 2 ? trial[1] : "f:" + trial[0]),
@@ -241,7 +294,7 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
     }
 
     private AudioFormat getAudioFormat() {
-        float sampleRate = 8000;
+        float sampleRate = 22050;
         int sampleSizeInBits = 16;
         int channels = 1;
         boolean signed = true;
@@ -252,7 +305,11 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
 
     @Override
     public void handlePitch(PitchDetectionResult pitchDetectionResult, AudioEvent audioEvent) {
+        //System.out.println(silenceDetector.currentSPL() + " pitch handler");
+        graphPanel.addDataPoint(silenceDetector.currentSPL(), System.currentTimeMillis());
+        SilenceDetectorCurrentSPL.set(silenceDetector.currentSPL());
         if(pitchDetectionResult.getPitch() != -1){
+            HasPitchBeenDetected.set(true);
             double timeStamp = audioEvent.getTimeStamp();
             float pitch = pitchDetectionResult.getPitch();
             float probability = pitchDetectionResult.getProbability();

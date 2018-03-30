@@ -4,13 +4,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class IsRecording {
 
-    private static final AtomicBoolean flag = new AtomicBoolean(false);
+    private static final AtomicBoolean isRecordingFlag = new AtomicBoolean(false);
 
-    public static void set(boolean value) {
-        flag.set(value);
+    public static void set(boolean isRecording) {
+        isRecordingFlag.set(isRecording);
     }
 
     public static boolean get() {
-        return flag.get();
+        return isRecordingFlag.get();
     }
 }
