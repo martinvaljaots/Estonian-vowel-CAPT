@@ -7,11 +7,6 @@ import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
-import de.fau.cs.jstk.exceptions.MalformedParameterStringException;
-import de.fau.cs.jstk.framed.*;
-import de.fau.cs.jstk.sampled.AudioFileReader;
-import de.fau.cs.jstk.sampled.AudioSource;
-import de.fau.cs.jstk.sampled.RawAudioFormat;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
@@ -26,24 +21,21 @@ import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
-import vowelcapt.helpers.GraphPanel;
-import vowelcapt.helpers.HasPitchBeenDetected;
-import vowelcapt.helpers.IsRecording;
-import vowelcapt.helpers.SilenceDetectorCurrentSPL;
+import vowelcapt.helpers.*;
 
 import javax.sound.sampled.*;
 import java.io.*;
-import java.util.Arrays;
 
 
-// TODO: find a way to minimize CPU usage - something is overusing it
-// this probably means that some process isn't finishing when it's supposed to
+// TODO: find a way for the graph panel to update nicely - will be necessary in the volume threshold setting page
+// TODO: put appropriate comments as to where
 public class SampleLesson extends Application implements PitchDetectionHandler {
 
     private final Button recordButton = new Button("Record");
-    private final Button playBackButton = new Button ("Play back");
+    private final Button playBackButton = new Button("Play back");
     private final Button listenButton = new Button("Listen");
     private final GraphPanel graphPanel = new GraphPanel(-80);
+    private FormantUtils formantUtils = new FormantUtils();
     private ByteArrayOutputStream out;
     private ByteArrayOutputStream vowelOut;
     private Label formantInfo = new Label();
@@ -81,7 +73,7 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         hbListenButton.getChildren().add(listenButton);
         grid.add(hbListenButton, 3, 0);
 
-        graphPanel.setSize(80, 100);
+        graphPanel.setSize(300, 400);
         final SwingNode swingNode = new SwingNode();
         swingNode.setContent(graphPanel);
 
@@ -106,6 +98,7 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         recordButton.setOnAction(e -> {
             if (!IsRecording.get()) {
                 IsRecording.set(true);
+                HasPitchBeenDetected.set(false);
                 playBackButton.setDisable(true);
                 recordButton.setText("Stop recording");
                 final AudioFormat format = getAudioFormat();
@@ -132,7 +125,7 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                     //dispatcher.addAudioProcessor(new SoundLevelMonitor());
                     dispatcher.addAudioProcessor(silenceDetector);
 
-                    new Thread(dispatcher,"Audio dispatching").start();
+                    new Thread(dispatcher, "Audio dispatching").start();
 
                     Runnable runner = new Runnable() {
                         int bufferSize = (int) format.getSampleRate()
@@ -181,10 +174,13 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                                 AudioSystem.write(aisVowel, AudioFileFormat.Type.WAVE, new File("AK/VowelPartTrial.wav"));
                                 ais.close();
                                 aisVowel.close();
+                                input.close();
+                                vowelInput.close();
+                                dispatcher.stop();
                             } catch (IOException e1) {
                                 e1.printStackTrace();
                             }
-                            findFormants();
+                            formantUtils.findFormants('a');
                         }
                     };
                     Thread captureThread = new Thread(runner);
@@ -252,41 +248,13 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         Scene scene = new Scene(grid);
         primaryStage.setTitle("EstonianVowelCAPT");
         primaryStage.setScene(scene);
+        primaryStage.setWidth(600);
+        primaryStage.setHeight(700);
         primaryStage.setOnCloseRequest(t -> {
             Platform.exit();
             System.exit(0);
         });
         primaryStage.show();
-    }
-
-    private void findFormants() {
-        String[] trial = new String[]{"AK/VowelPartTrial.wav", "3"};
-        try {
-            AudioSource as = new AudioFileReader(trial[0],
-                    RawAudioFormat.create(trial.length > 2 ? trial[1] : "f:" + trial[0]),
-                    true);
-            Window wnd = new HammingWindow(as, 25, 10, false);
-            // AutoCorrelation acf = new FastACF(wnd);
-            AutoCorrelation acf = new SimpleACF(wnd);
-            LPCSpectrum lpc = new LPCSpectrum(acf, 22, true);
-            Formants fs = new Formants(lpc, as.getSampleRate(), Integer.parseInt(trial[1]));
-            System.out.println(as.getSampleRate());
-            System.out.println(Arrays.toString(trial));
-            System.out.println(wnd.getFrameSize());
-            System.out.println(acf);
-            System.out.println(lpc.getFrameSize());
-            System.out.println(fs);
-            double[] buf = new double[fs.getFrameSize()];
-            formants = "";
-
-            while (fs.read(buf)) {
-                System.out.println(Arrays.toString(buf));
-                formants += Arrays.toString(buf) + "\n";
-            }
-
-        } catch (UnsupportedAudioFileException | IOException | MalformedParameterStringException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void main(String[] args) {
@@ -308,13 +276,13 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         //System.out.println(silenceDetector.currentSPL() + " pitch handler");
         graphPanel.addDataPoint(silenceDetector.currentSPL(), System.currentTimeMillis());
         SilenceDetectorCurrentSPL.set(silenceDetector.currentSPL());
-        if(pitchDetectionResult.getPitch() != -1){
+        if (pitchDetectionResult.getPitch() != -1) {
             HasPitchBeenDetected.set(true);
             double timeStamp = audioEvent.getTimeStamp();
             float pitch = pitchDetectionResult.getPitch();
             float probability = pitchDetectionResult.getProbability();
             double rms = audioEvent.getRMS() * 100;
-            String message = String.format("Pitch detected at %.2fs: %.2fHz ( %.2f probability, RMS: %.5f )\n", timeStamp,pitch,probability,rms);
+            String message = String.format("Pitch detected at %.2fs: %.2fHz ( %.2f probability, RMS: %.5f )\n", timeStamp, pitch, probability, rms);
             System.out.println(message);
         }
     }

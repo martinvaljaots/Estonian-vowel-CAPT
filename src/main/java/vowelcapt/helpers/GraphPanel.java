@@ -86,4 +86,9 @@ public final class GraphPanel extends JPanel {
             return (int) ((ms % 15000)/15000.0 * getWidth());
         }
 
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(200, 200);
+        }
+
     }
