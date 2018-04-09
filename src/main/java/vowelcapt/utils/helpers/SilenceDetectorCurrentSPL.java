@@ -1,4 +1,4 @@
-package vowelcapt.helpers;
+package vowelcapt.utils.helpers;
 
 import com.google.common.util.concurrent.AtomicDouble;
 

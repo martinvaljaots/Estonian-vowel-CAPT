@@ -21,14 +21,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
-import vowelcapt.helpers.*;
+import vowelcapt.utils.*;
+import vowelcapt.utils.helpers.HasPitchBeenDetected;
+import vowelcapt.utils.helpers.IsRecording;
+import vowelcapt.utils.helpers.SilenceDetectorCurrentSPL;
 
 import javax.sound.sampled.*;
 import java.io.*;
 
 
 // TODO: find a way for the graph panel to update nicely - will be necessary in the volume threshold setting page
-// TODO: put appropriate comments as to where
 public class SampleLesson extends Application implements PitchDetectionHandler {
 
     private final Button recordButton = new Button("Record");
@@ -39,7 +41,6 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
     private ByteArrayOutputStream out;
     private ByteArrayOutputStream vowelOut;
     private Label formantInfo = new Label();
-    private static String formants = "";
     private SilenceDetector silenceDetector = new SilenceDetector();
 
     @Override
@@ -122,7 +123,6 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                     // add a processor
                     dispatcher.addAudioProcessor(new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.YIN,
                             44100, 1024, this));
-                    //dispatcher.addAudioProcessor(new SoundLevelMonitor());
                     dispatcher.addAudioProcessor(silenceDetector);
 
                     new Thread(dispatcher, "Audio dispatching").start();
@@ -133,19 +133,15 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                         byte buffer[] = new byte[bufferSize];
 
                         public void run() {
-                            //System.out.println(bufferSize);
                             out = new ByteArrayOutputStream();
                             vowelOut = new ByteArrayOutputStream();
                             while (IsRecording.get()) {
-                                //System.out.println("yes, recording");
+                                //TODO: this buffer writing might be the cause of the clipping issue
                                 int count =
                                         line.read(buffer, 0, buffer.length);
                                 if (count > 0) {
                                     out.write(buffer, 0, count);
-                                    //System.out.println(silenceDetector.currentSPL() + " in-class");
-                                    //System.out.println(SilenceDetectorCurrentSPL.get() + " atomic double");
                                     if (SilenceDetectorCurrentSPL.get() > -70 && HasPitchBeenDetected.get()) {
-                                        //System.out.println("yes, detecting \"vowel\"");
                                         vowelOut.write(buffer, 0, count);
                                     }
                                 }
@@ -156,7 +152,6 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                             } catch (IOException e1) {
                                 e1.printStackTrace();
                             }
-                            //ais.close();
                             line.stop();
                             line.close();
                             byte audio[] = out.toByteArray();
@@ -193,7 +188,6 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                 formantInfo.setText("Recording stopped.");
                 recordButton.setText("Record");
                 playBackButton.setDisable(false);
-                //formantInfo.setText(formants);
             }
         });
 
@@ -273,7 +267,6 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
 
     @Override
     public void handlePitch(PitchDetectionResult pitchDetectionResult, AudioEvent audioEvent) {
-        //System.out.println(silenceDetector.currentSPL() + " pitch handler");
         graphPanel.addDataPoint(silenceDetector.currentSPL(), System.currentTimeMillis());
         SilenceDetectorCurrentSPL.set(silenceDetector.currentSPL());
         if (pitchDetectionResult.getPitch() != -1) {

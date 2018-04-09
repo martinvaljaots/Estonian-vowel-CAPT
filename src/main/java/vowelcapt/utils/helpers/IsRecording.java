@@ -1,4 +1,4 @@
-package vowelcapt.helpers;
+package vowelcapt.utils.helpers;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

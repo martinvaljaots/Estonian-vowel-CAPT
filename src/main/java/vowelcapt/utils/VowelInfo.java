@@ -1,4 +1,4 @@
-package vowelcapt.helpers;
+package vowelcapt.utils;
 
 public class VowelInfo {
 

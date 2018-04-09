@@ -1,4 +1,4 @@
-package vowelcapt.helpers;
+package vowelcapt.utils;
 
 import javax.swing.*;
 import java.awt.*;

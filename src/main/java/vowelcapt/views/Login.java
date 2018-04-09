@@ -12,6 +12,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import vowelcapt.utils.AccountUtils;
 
 public class Login extends Application {
 
@@ -31,8 +32,8 @@ public class Login extends Application {
         Label userName = new Label("Username:");
         grid.add(userName, 0, 1);
 
-        TextField userTextField = new TextField();
-        grid.add(userTextField, 1, 1);
+        TextField userNameField = new TextField();
+        grid.add(userNameField, 1, 1);
 
         Label userPassword = new Label("Password:");
         grid.add(userPassword, 0, 2);
@@ -55,8 +56,19 @@ public class Login extends Application {
         final Text actiontarget = new Text();
         grid.add(actiontarget, 1, 6);
         signIn.setOnAction(e -> {
-            actiontarget.setFill(Color.FIREBRICK);
-            actiontarget.setText("Sign in button pressed");
+            if (userNameField.getText().equals("")
+                    || passwordField.getText().equals("")) {
+                actiontarget.setFill(Color.FIREBRICK);
+                actiontarget.setText("All fields are mandatory!");
+            } else {
+                actiontarget.setText("");
+                AccountUtils accountUtils = new AccountUtils();
+                if (accountUtils.attemptLogin(userNameField.getText(), passwordField.getText()).isPresent()) {
+                    actiontarget.setText("Logged in!");
+                } else {
+                    actiontarget.setText("Invalid username/password!");
+                }
+            }
         });
 
         final Text registerTarget = new Text();

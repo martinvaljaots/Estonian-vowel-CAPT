@@ -1,4 +1,4 @@
-package vowelcapt.helpers;
+package vowelcapt.utils;
 
 import de.fau.cs.jstk.exceptions.MalformedParameterStringException;
 import de.fau.cs.jstk.framed.*;
