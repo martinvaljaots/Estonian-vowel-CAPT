@@ -1,10 +1,12 @@
 package vowelcapt.utils;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -33,7 +35,6 @@ public class AccountUtils {
         }
     }
 
-
     private static Function<String, Account> mapToAccount = (line) -> {
         String[] accountInfoStringArray = line.split(";");
         String userName = accountInfoStringArray[0];
@@ -48,5 +49,21 @@ public class AccountUtils {
                 .filter(e -> e.getUserName().equals(userName)
                         && e.getPassword().equals(password))
                 .findFirst();
+    }
+
+    public void saveThreshold(String userName, double threshold) {
+        Path path = FileSystems.getDefault().getPath("resources/accounts/" + userName + "/threshold.txt");
+
+        String newThreshold = String.valueOf(threshold);
+        System.out.println(threshold);
+        System.out.println(path.toString());
+
+        List<String> newThresholdAsLines = Arrays.asList(newThreshold);
+
+        try {
+            Files.write(path, newThresholdAsLines, Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

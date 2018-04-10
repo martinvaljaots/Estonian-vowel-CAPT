@@ -31,6 +31,8 @@ import java.io.*;
 
 
 // TODO: find a way for the graph panel to update nicely - will be necessary in the volume threshold setting page
+// TODO: remove graph panel from this view once ThresholdSetter is properly implemented
+// TODO: make this usable with any word - string that gets used for label, playback, char that is used for formant finding etc
 public class SampleLesson extends Application implements PitchDetectionHandler {
 
     private final Button recordButton = new Button("Record");
@@ -51,11 +53,11 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         grid.setVgap(15);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        Label whatToPronounce = new Label("Pronounce the word: ");
-        grid.add(whatToPronounce, 0, 0);
+        Label pronounceTheWordLabel = new Label("Pronounce the word: ");
+        grid.add(pronounceTheWordLabel, 0, 0);
 
-        Label word = new Label("sada");
-        grid.add(word, 1, 0);
+        Label wordLabel = new Label("sada");
+        grid.add(wordLabel, 1, 0);
 
         grid.add(formantInfo, 0, 2);
 
@@ -85,7 +87,8 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         listenButton.setOnAction(e -> {
             recordButton.setDisable(true);
             listenButton.setDisable(true);
-            String bip = "C:/Test/sada.wav";
+            // TODO: refactor this audio file location and setting
+            String bip = "AK/sada.wav";
             Media hit = new Media(new File(bip).toURI().toString());
             MediaPlayer mediaPlayer = new MediaPlayer(hit);
             mediaPlayer.play();
@@ -141,7 +144,7 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                                         line.read(buffer, 0, buffer.length);
                                 if (count > 0) {
                                     out.write(buffer, 0, count);
-                                    if (SilenceDetectorCurrentSPL.get() > -70 && HasPitchBeenDetected.get()) {
+                                    if (SilenceDetectorCurrentSPL.get() > -80 && HasPitchBeenDetected.get()) {
                                         vowelOut.write(buffer, 0, count);
                                     }
                                 }
