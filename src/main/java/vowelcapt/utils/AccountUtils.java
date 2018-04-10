@@ -66,4 +66,25 @@ public class AccountUtils {
             e.printStackTrace();
         }
     }
+
+    public void saveResult(String userName, char vowel, boolean best, double[] results) {
+        Path path;
+        if (best) {
+            path = FileSystems.getDefault().getPath("resources/accounts/" + userName + "/" + vowel + "_best.txt");
+        } else {
+            path = FileSystems.getDefault().getPath("resources/accounts/" + userName + "/" + vowel + "_last.txt");
+        }
+
+        String newResult = results[0] + ";" + results[1];
+        System.out.println(Arrays.toString(results));
+        System.out.println(path.toString());
+
+        List<String> newResultAsLines = Arrays.asList(newResult);
+
+        try {
+            Files.write(path, newResultAsLines, Charset.forName("UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

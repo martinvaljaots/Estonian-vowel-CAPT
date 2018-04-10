@@ -30,7 +30,6 @@ import javax.sound.sampled.*;
 import java.io.*;
 
 
-// TODO: find a way for the graph panel to update nicely - will be necessary in the volume threshold setting page
 // TODO: remove graph panel from this view once ThresholdSetter is properly implemented
 // TODO: make this usable with any word - string that gets used for label, playback, char that is used for formant finding etc
 public class SampleLesson extends Application implements PitchDetectionHandler {
@@ -44,6 +43,10 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
     private ByteArrayOutputStream vowelOut;
     private Label formantInfo = new Label();
     private SilenceDetector silenceDetector = new SilenceDetector();
+    private AccountUtils accountUtils = new AccountUtils();
+    private String word = "maam";
+    private Account currentAccount = new Account("test", "test", "male");
+    private char vowel = 'a';
 
     @Override
     public void start(Stage primaryStage) {
@@ -53,28 +56,19 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         grid.setVgap(15);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        Label pronounceTheWordLabel = new Label("Pronounce the word: ");
+        Label pronounceTheWordLabel = new Label("Pronounce the word: " + word);
         grid.add(pronounceTheWordLabel, 0, 0);
 
-        Label wordLabel = new Label("sada");
-        grid.add(wordLabel, 1, 0);
+        //Label wordLabel = new Label("sada");
+        //grid.add(wordLabel, 1, 0);
 
         grid.add(formantInfo, 0, 2);
 
-        HBox hbRecordButton = new HBox(15);
-        hbRecordButton.setAlignment(Pos.BOTTOM_RIGHT);
-        hbRecordButton.getChildren().add(recordButton);
-        grid.add(hbRecordButton, 0, 1);
-
-        HBox hbPlayBackButton = new HBox(15);
-        hbPlayBackButton.setAlignment(Pos.BOTTOM_RIGHT);
-        hbPlayBackButton.getChildren().add(playBackButton);
-        grid.add(hbPlayBackButton, 1, 1);
-
-        HBox hbListenButton = new HBox(15);
-        hbListenButton.setAlignment(Pos.BOTTOM_RIGHT);
-        hbListenButton.getChildren().add(listenButton);
-        grid.add(hbListenButton, 3, 0);
+        //TODO: either fix spacing for this or put pronounce the word and the word in an hbox too
+        HBox hBox = new HBox(15);
+        hBox.setAlignment(Pos.BOTTOM_RIGHT);
+        hBox.getChildren().addAll(listenButton, recordButton, playBackButton);
+        grid.add(hBox, 0, 1);
 
         graphPanel.setSize(300, 400);
         final SwingNode swingNode = new SwingNode();
@@ -82,13 +76,13 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
 
         Pane pane = new Pane();
         pane.getChildren().add(swingNode);
-        grid.add(pane, 4, 5);
+        //grid.add(pane, 4, 5);
 
         listenButton.setOnAction(e -> {
             recordButton.setDisable(true);
             listenButton.setDisable(true);
             // TODO: refactor this audio file location and setting
-            String bip = "AK/sada.wav";
+            String bip = "resources/sample_sounds/" + word + ".wav";
             Media hit = new Media(new File(bip).toURI().toString());
             MediaPlayer mediaPlayer = new MediaPlayer(hit);
             mediaPlayer.play();
@@ -168,8 +162,9 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                                     new ByteArrayInputStream(vowelAudio);
                             final AudioInputStream aisVowel = new AudioInputStream(vowelInput, format, vowelAudio.length / format.getFrameSize());
                             try {
-                                AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File("AK/RecordAudio3.wav"));
-                                AudioSystem.write(aisVowel, AudioFileFormat.Type.WAVE, new File("AK/VowelPartTrial.wav"));
+                                //TODO: these path names need to be refactored to be usable with any vowel
+                                AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File("resources/accounts/" + currentAccount.getUserName() + "/RecordAudio3.wav"));
+                                AudioSystem.write(aisVowel, AudioFileFormat.Type.WAVE, new File("resources/accounts/" + currentAccount.getUserName() + "/VowelPartTrial.wav"));
                                 ais.close();
                                 aisVowel.close();
                                 input.close();
@@ -178,7 +173,10 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                             } catch (IOException e1) {
                                 e1.printStackTrace();
                             }
-                            formantUtils.findFormants('a');
+                            //TODO: findFormants has to take vowel and username for processing ANY users ANY vowel pronunciation.
+                            double[] formantResults = formantUtils.findFormants(vowel);
+                            // TODO: implement checking of whether this is the best result
+                            accountUtils.saveResult(currentAccount.getUserName(), vowel, false, formantResults);
                         }
                     };
                     Thread captureThread = new Thread(runner);
@@ -281,5 +279,12 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
             String message = String.format("Pitch detected at %.2fs: %.2fHz ( %.2f probability, RMS: %.5f )\n", timeStamp, pitch, probability, rms);
             System.out.println(message);
         }
+    }
+
+    public void initializeAndStart(Stage primaryStage, Account account, String word, char vowel) {
+        this.word = word;
+        currentAccount = account;
+        this.vowel = vowel;
+        start(primaryStage);
     }
 }

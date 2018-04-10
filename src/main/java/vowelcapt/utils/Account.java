@@ -4,12 +4,12 @@ public class Account {
 
     private String userName;
     private String password;
-    private String sex;
+    private String gender;
 
-    public Account(String userName, String password, String sex) {
+    public Account(String userName, String password, String gender) {
         this.userName = userName;
         this.password = password;
-        this.sex = sex;
+        this.gender = gender;
     }
 
     public String getUserName() {
@@ -20,12 +20,12 @@ public class Account {
         return password;
     }
 
-    public String getSex() {
-        return sex;
+    public String getGender() {
+        return gender;
     }
 
     @Override
     public String toString() {
-        return userName + " " + password + " " + sex;
+        return userName + " " + password + " " + gender;
     }
 }

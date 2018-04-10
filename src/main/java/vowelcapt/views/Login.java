@@ -4,7 +4,10 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
@@ -12,12 +15,15 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import vowelcapt.utils.Account;
 import vowelcapt.utils.AccountUtils;
+
+import java.util.Optional;
 
 public class Login extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
 
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
@@ -54,17 +60,20 @@ public class Login extends Application {
         grid.add(registerHBox, 0, 4);
 
         final Text actiontarget = new Text();
+        actiontarget.setFill(Color.FIREBRICK);
         grid.add(actiontarget, 1, 6);
         signIn.setOnAction(e -> {
             if (userNameField.getText().equals("")
                     || passwordField.getText().equals("")) {
-                actiontarget.setFill(Color.FIREBRICK);
                 actiontarget.setText("All fields are mandatory!");
             } else {
                 actiontarget.setText("");
                 AccountUtils accountUtils = new AccountUtils();
-                if (accountUtils.attemptLogin(userNameField.getText(), passwordField.getText()).isPresent()) {
-                    actiontarget.setText("Logged in!");
+                Optional<Account> accountOptional = accountUtils
+                        .attemptLogin(userNameField.getText(), passwordField.getText());
+                if (accountOptional.isPresent()) {
+                    new ExerciseSelection().initializeAndStart(primaryStage, accountOptional.get());
+
                 } else {
                     actiontarget.setText("Invalid username/password!");
                 }

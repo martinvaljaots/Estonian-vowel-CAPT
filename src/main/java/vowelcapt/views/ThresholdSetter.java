@@ -20,6 +20,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
+import vowelcapt.utils.Account;
 import vowelcapt.utils.AccountUtils;
 import vowelcapt.utils.GraphPanel;
 
@@ -38,24 +39,24 @@ public class ThresholdSetter extends Application implements AudioProcessor {
     private SilenceDetector silenceDetector = new SilenceDetector();
     private double threshold = -80;
     private AccountUtils accountUtils = new AccountUtils();
+    //TODO: remove this test account before user testing
+    private Account currentAccount = new Account("test", "test", "male");
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(15);
         grid.setVgap(15);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        Label instructionLabel = new Label();
-        instructionLabel.setText("Listen to the pronunciation of \"maam\" and try to replicate it.\n" +
+        Label instructionLabel = new Label("Listen to the pronunciation of \"maam\" and try to replicate it.\n" +
                 "Move the slider to change your microphone volume so that only \nthe vowel part \"aa\" lights up as green.\n" +
                 "This is necessary for accurately measuring your pronunciations.");
 
         grid.add(instructionLabel, 0, 0);
 
-        Button listenButton = new Button();
-        listenButton.setText("Listen to \"maam\"");
+        Button listenButton = new Button("Listen to \"maam\"");
         listenButton.setOnAction(e -> {
             String bip = "resources/sample_sounds/maam.wav";
             Media hit = new Media(new File(bip).toURI().toString());
@@ -104,7 +105,8 @@ public class ThresholdSetter extends Application implements AudioProcessor {
             confirmationResult.ifPresent(a -> {
                 if (confirmationResult.get() == ButtonType.OK) {
                     System.out.println("Saving threshold level: " + threshold);
-                    accountUtils.saveThreshold("maie", threshold);
+                    accountUtils.saveThreshold(currentAccount.getUserName(), threshold);
+                    new ExerciseSelection().initializeAndStart(primaryStage, currentAccount);
                 }
             });
         });
@@ -189,5 +191,10 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         boolean bigEndian = true;
         return new AudioFormat(sampleRate,
                 sampleSizeInBits, channels, signed, bigEndian);
+    }
+
+    public void initializeAndStart(Stage primaryStage, Account account) {
+        currentAccount = account;
+        start(primaryStage);
     }
 }

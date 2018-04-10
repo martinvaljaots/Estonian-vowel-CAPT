@@ -46,7 +46,7 @@ public class FormantUtils {
         return new VowelInfo(vowel, new double[]{firstFormantValue, secondFormantValue});
     };
 
-    public void findFormants(char vowel) {
+    public double[] findFormants(char vowel) {
         String[] trial = new String[]{"AK/VowelPartTrial.wav", "3"};
         try {
             AudioSource as = new AudioFileReader(trial[0],
@@ -73,12 +73,16 @@ public class FormantUtils {
                 secondFormantValues.add(buf[1]);
             }
 
-            System.out.println(calculateAverageFormantValue(1, firstFormantValues, vowel));
-            System.out.println(calculateAverageFormantValue(2, secondFormantValues, vowel));
+            double firstFormantAverage = calculateAverageFormantValue(1, firstFormantValues, vowel);
+            double secondFormantAverage = calculateAverageFormantValue(2, secondFormantValues, vowel);
+            System.out.println(firstFormantAverage);
+            System.out.println(secondFormantAverage);
+            return new double[]{firstFormantAverage, secondFormantAverage};
 
         } catch (UnsupportedAudioFileException | IOException | MalformedParameterStringException e) {
             e.printStackTrace();
         }
+        return new double[]{0, 0};
     }
 
     private double calculateAverageFormantValue(int formant, List<Double> formantValues, char vowel) {

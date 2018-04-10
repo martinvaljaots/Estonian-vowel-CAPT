@@ -1,4 +1,5 @@
-Username;Password;Sex;
-ter;re;male;
-tee;ree;female;
-maie;lele;female;
+Username;Password;Gender
+ter;re;male
+tee;ree;female
+maie;lele;female
+test;test;male

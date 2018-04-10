@@ -13,6 +13,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import vowelcapt.utils.Account;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,17 +58,30 @@ public class Register extends Application {
         PasswordField passwordAgainField = new PasswordField();
         grid.add(passwordAgainField, 1, 3);
 
+        Button backButton = new Button("Back");
+        backButton.setOnAction(e -> {
+            Login login = new Login();
+            login.start(primaryStage);
+        });
+        grid.add(backButton, 0, 5);
+
         final Button registerBtn = new Button("Register");
         HBox hbBtn = new HBox(15);
         hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
         hbBtn.getChildren().add(registerBtn);
         grid.add(hbBtn, 1, 5);
 
-        Label sexSelectionLabel = new Label("Select sex:");
-        grid.add(sexSelectionLabel, 0, 4);
+        Label genderSelectionLabel = new Label("Select gender:");
+        grid.add(genderSelectionLabel, 0, 4);
 
-        final ComboBox sexSelect = new ComboBox(FXCollections.observableArrayList("Male", "Female"));
-        grid.add(sexSelect, 1, 4);
+        final ComboBox genderSelect = new ComboBox(FXCollections.observableArrayList("Male", "Female"));
+        grid.add(genderSelect, 1, 4);
+
+        Alert continuationAlert = new Alert(Alert.AlertType.INFORMATION);
+        continuationAlert.setTitle("Account registered");
+        continuationAlert.setHeaderText(null);
+        continuationAlert.setContentText("Account registered successfully!\n" +
+                "You will now be guided through adjusting your microphone volume.");
 
         final Text actiontarget = new Text();
         grid.add(actiontarget, 1, 6);
@@ -78,14 +92,16 @@ public class Register extends Application {
             } else if (userNameField.getText().equals("")
                     || passwordField.getText().equals("")
                     || passwordAgainField.getText().equals("")
-                    || sexSelect.getValue() == null) {
+                    || genderSelect.getValue() == null) {
                 actiontarget.setFill(Color.FIREBRICK);
                 actiontarget.setText("All fields are mandatory!");
             } else {
-                System.out.println(sexSelect.getValue().toString());
-                registerUser(userNameField.getText(), passwordField.getText(), sexSelect.getValue().toString());
-                actiontarget.setFill(Color.GREEN);
-                actiontarget.setText("Registered!");
+                Account account = new Account(userNameField.getText(), passwordField.getText(),
+                        genderSelect.getValue().toString().toLowerCase());
+                registerUser(account);
+                continuationAlert.showAndWait();
+                ThresholdSetter thresholdSetter = new ThresholdSetter();
+                thresholdSetter.initializeAndStart(primaryStage, account);
             }
         });
 
@@ -95,10 +111,10 @@ public class Register extends Application {
         primaryStage.show();
     }
 
-    private void registerUser(String userName, String password, String sex) {
+    private void registerUser(Account account) {
         Path path = FileSystems.getDefault().getPath("resources/accounts/acc.csv");
 
-        String newUserInfo = userName + ";" + password + ";" + sex.toLowerCase() + ";";
+        String newUserInfo = account.getUserName() + ";" + account.getPassword() + ";" + account.getGender();
         System.out.println(newUserInfo);
         System.out.println(path.toString());
 
@@ -110,12 +126,17 @@ public class Register extends Application {
             e.printStackTrace();
         }
 
-        new File("resources/accounts/" + userName).mkdirs();
+        new File("resources/accounts/" + account.getUserName()).mkdirs();
 
 
     }
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    public void customLauncher(Stage primaryStage, String message) {
+        System.out.println(message);
+        start(primaryStage);
     }
 }
