@@ -46,19 +46,19 @@ public class FormantUtils {
         return new VowelInfo(vowel, new double[]{firstFormantValue, secondFormantValue});
     };
 
-    public double[] findFormants(char vowel) {
-        String[] trial = new String[]{"AK/VowelPartTrial.wav", "3"};
+    public double[] findFormants(String userName, char vowel) {
+        String filePath = "resources/accounts/" + userName + "/" + vowel + "_justVowel.wav";
         try {
-            AudioSource as = new AudioFileReader(trial[0],
-                    RawAudioFormat.create(trial.length > 2 ? trial[1] : "f:" + trial[0]),
+            AudioSource as = new AudioFileReader(filePath,
+                    RawAudioFormat.create("f:" + filePath),
                     true);
             Window wnd = new HammingWindow(as, 25, 10, false);
             // AutoCorrelation acf = new FastACF(wnd);
             AutoCorrelation acf = new SimpleACF(wnd);
             LPCSpectrum lpc = new LPCSpectrum(acf, 22, true);
-            Formants fs = new Formants(lpc, as.getSampleRate(), Integer.parseInt(trial[1]));
+            Formants fs = new Formants(lpc, as.getSampleRate(), 3);
             System.out.println(as.getSampleRate());
-            System.out.println(Arrays.toString(trial));
+            System.out.println(filePath);
             System.out.println(wnd.getFrameSize());
             System.out.println(acf);
             System.out.println(lpc.getFrameSize());

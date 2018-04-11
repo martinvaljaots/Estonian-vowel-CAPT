@@ -5,6 +5,7 @@ public class Account {
     private String userName;
     private String password;
     private String gender;
+    private double threshold;
 
     public Account(String userName, String password, String gender) {
         this.userName = userName;
@@ -24,8 +25,16 @@ public class Account {
         return gender;
     }
 
+    public double getThreshold() {
+        return threshold;
+    }
+
+    public void setThreshold(double threshold) {
+        this.threshold = threshold;
+    }
+
     @Override
     public String toString() {
-        return userName + " " + password + " " + gender;
+        return userName + " " + password + " " + gender + " " + threshold;
     }
 }

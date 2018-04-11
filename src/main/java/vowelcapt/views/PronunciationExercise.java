@@ -20,6 +20,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import vowelcapt.utils.*;
 import vowelcapt.utils.helpers.HasPitchBeenDetected;
@@ -30,9 +31,11 @@ import javax.sound.sampled.*;
 import java.io.*;
 
 
-// TODO: remove graph panel from this view once ThresholdSetter is properly implemented
+// TODO: remove graph panel from this view entirely once ThresholdSetter is properly implemented
+// TODO: scene titles to tell where you even are
 // TODO: make this usable with any word - string that gets used for label, playback, char that is used for formant finding etc
-public class SampleLesson extends Application implements PitchDetectionHandler {
+// the last todo can only be tested after this exercise is called for ExerciseSelection
+public class PronunciationExercise extends Application implements PitchDetectionHandler {
 
     private final Button recordButton = new Button("Record");
     private final Button playBackButton = new Button("Play back");
@@ -47,6 +50,8 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
     private String word = "maam";
     private Account currentAccount = new Account("test", "test", "male");
     private char vowel = 'a';
+    private String userPath = "resources/accounts/test/";
+    private double threshold = -80;
 
     @Override
     public void start(Stage primaryStage) {
@@ -56,19 +61,20 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         grid.setVgap(15);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        Label pronounceTheWordLabel = new Label("Pronounce the word: " + word);
+        Label pronounceTheWordLabel = new Label("Listen to the recording and \npronounce the word:");
         grid.add(pronounceTheWordLabel, 0, 0);
 
-        //Label wordLabel = new Label("sada");
-        //grid.add(wordLabel, 1, 0);
+        Label wordLabel = new Label(word);
+        wordLabel.setFont(Font.font("Arial", 30));
+        grid.add(wordLabel, 0, 1);
 
-        grid.add(formantInfo, 0, 2);
+        //grid.add(formantInfo, 0, 2);
 
         //TODO: either fix spacing for this or put pronounce the word and the word in an hbox too
         HBox hBox = new HBox(15);
         hBox.setAlignment(Pos.BOTTOM_RIGHT);
         hBox.getChildren().addAll(listenButton, recordButton, playBackButton);
-        grid.add(hBox, 0, 1);
+        grid.add(hBox, 0, 2);
 
         graphPanel.setSize(300, 400);
         final SwingNode swingNode = new SwingNode();
@@ -81,7 +87,6 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         listenButton.setOnAction(e -> {
             recordButton.setDisable(true);
             listenButton.setDisable(true);
-            // TODO: refactor this audio file location and setting
             String bip = "resources/sample_sounds/" + word + ".wav";
             Media hit = new Media(new File(bip).toURI().toString());
             MediaPlayer mediaPlayer = new MediaPlayer(hit);
@@ -99,7 +104,7 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                 HasPitchBeenDetected.set(false);
                 playBackButton.setDisable(true);
                 recordButton.setText("Stop recording");
-                final AudioFormat format = getAudioFormat();
+                final AudioFormat format = AudioUtils.getAudioFormat();
                 DataLine.Info info = new DataLine.Info(
                         TargetDataLine.class, format);
 
@@ -133,13 +138,14 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                             out = new ByteArrayOutputStream();
                             vowelOut = new ByteArrayOutputStream();
                             while (IsRecording.get()) {
-                                //TODO: this buffer writing might be the cause of the clipping issue
                                 int count =
                                         line.read(buffer, 0, buffer.length);
                                 if (count > 0) {
+                                    byte secondBuffer[] = buffer;
                                     out.write(buffer, 0, count);
-                                    if (SilenceDetectorCurrentSPL.get() > -80 && HasPitchBeenDetected.get()) {
-                                        vowelOut.write(buffer, 0, count);
+                                    // TODO: implement threshold
+                                    if (SilenceDetectorCurrentSPL.get() > threshold && HasPitchBeenDetected.get()) {
+                                        vowelOut.write(secondBuffer, 0, count);
                                     }
                                 }
                             }
@@ -161,10 +167,10 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                             InputStream vowelInput =
                                     new ByteArrayInputStream(vowelAudio);
                             final AudioInputStream aisVowel = new AudioInputStream(vowelInput, format, vowelAudio.length / format.getFrameSize());
+
                             try {
-                                //TODO: these path names need to be refactored to be usable with any vowel
-                                AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File("resources/accounts/" + currentAccount.getUserName() + "/RecordAudio3.wav"));
-                                AudioSystem.write(aisVowel, AudioFileFormat.Type.WAVE, new File("resources/accounts/" + currentAccount.getUserName() + "/VowelPartTrial.wav"));
+                                AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File(userPath + vowel + "_last.wav"));
+                                AudioSystem.write(aisVowel, AudioFileFormat.Type.WAVE, new File(userPath + vowel + "_justVowel.wav"));
                                 ais.close();
                                 aisVowel.close();
                                 input.close();
@@ -173,8 +179,13 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                             } catch (IOException e1) {
                                 e1.printStackTrace();
                             }
-                            //TODO: findFormants has to take vowel and username for processing ANY users ANY vowel pronunciation.
-                            double[] formantResults = formantUtils.findFormants(vowel);
+
+                            double[] formantResults = formantUtils.findFormants(currentAccount.getUserName(), vowel);
+                            String recordingPath = userPath + vowel + "_last.wav";
+                            String waveFormPath = userPath + vowel + "_img.png";
+                            AudioWaveformCreator audioWaveformCreator = new AudioWaveformCreator(new File(recordingPath), waveFormPath);
+                            boolean isWaveFormCreated = audioWaveformCreator.createWaveImage();
+                            System.out.println(isWaveFormCreated);
                             // TODO: implement checking of whether this is the best result
                             accountUtils.saveResult(currentAccount.getUserName(), vowel, false, formantResults);
                         }
@@ -198,7 +209,7 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
                 byte audio[] = out.toByteArray();
                 InputStream input =
                         new ByteArrayInputStream(audio);
-                final AudioFormat format = getAudioFormat();
+                final AudioFormat format = AudioUtils.getAudioFormat();
                 final AudioInputStream ais =
                         new AudioInputStream(input, format,
                                 audio.length / format.getFrameSize());
@@ -256,19 +267,9 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
         launch(args);
     }
 
-    private AudioFormat getAudioFormat() {
-        float sampleRate = 22050;
-        int sampleSizeInBits = 16;
-        int channels = 1;
-        boolean signed = true;
-        boolean bigEndian = true;
-        return new AudioFormat(sampleRate,
-                sampleSizeInBits, channels, signed, bigEndian);
-    }
-
     @Override
     public void handlePitch(PitchDetectionResult pitchDetectionResult, AudioEvent audioEvent) {
-        graphPanel.addDataPoint(silenceDetector.currentSPL(), System.currentTimeMillis());
+        //graphPanel.addDataPoint(silenceDetector.currentSPL(), System.currentTimeMillis());
         SilenceDetectorCurrentSPL.set(silenceDetector.currentSPL());
         if (pitchDetectionResult.getPitch() != -1) {
             HasPitchBeenDetected.set(true);
@@ -282,9 +283,12 @@ public class SampleLesson extends Application implements PitchDetectionHandler {
     }
 
     public void initializeAndStart(Stage primaryStage, Account account, String word, char vowel) {
+        //TODO: account needs to hold threshold and it needs to be set here
         this.word = word;
         currentAccount = account;
+        threshold = account.getThreshold();
         this.vowel = vowel;
+        userPath = "resources/accounts/" + account.getUserName() + "/";
         start(primaryStage);
     }
 }

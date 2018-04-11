@@ -7,8 +7,6 @@ import be.tarsos.dsp.SilenceDetector;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingNode;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -22,6 +20,7 @@ import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import vowelcapt.utils.Account;
 import vowelcapt.utils.AccountUtils;
+import vowelcapt.utils.AudioUtils;
 import vowelcapt.utils.GraphPanel;
 
 import javax.sound.sampled.*;
@@ -52,7 +51,8 @@ public class ThresholdSetter extends Application implements AudioProcessor {
 
         Label instructionLabel = new Label("Listen to the pronunciation of \"maam\" and try to replicate it.\n" +
                 "Move the slider to change your microphone volume so that only \nthe vowel part \"aa\" lights up as green.\n" +
-                "This is necessary for accurately measuring your pronunciations.");
+                "This is necessary for accurately measuring your pronunciations.\n" +
+                "The red bar shows the current highest recorded volume.");
 
         grid.add(instructionLabel, 0, 0);
 
@@ -82,21 +82,18 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         thresholdSlider.setMinorTickCount(5);
         thresholdSlider.setBlockIncrement(10);
 
-        thresholdSlider.valueProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                graphPanel.setThresholdLevel(newValue.doubleValue());
-                threshold = newValue.doubleValue();
-                System.out.println("Threshold set to: " + newValue.doubleValue());
-            }
+        thresholdSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            graphPanel.setThresholdLevel(newValue.doubleValue());
+            threshold = newValue.doubleValue();
+            System.out.println("Threshold set to: " + newValue.doubleValue());
         });
 
         grid.add(thresholdSlider, 0, 3);
 
         Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION);
         confirmationAlert.setTitle("Microphone volume level confirmation");
-        confirmationAlert.setHeaderText("The current microphone volume level will be overwritten");
-        confirmationAlert.setContentText("Are you sure? \nThis level can be changed in the exercise selection screen.");
+        confirmationAlert.setHeaderText("Saving current microphone volume level");
+        confirmationAlert.setContentText("Are you sure? \nThis level can also be changed in the exercise selection screen.");
 
         Button saveButton = new Button();
         saveButton.setText("Save");
@@ -106,6 +103,7 @@ public class ThresholdSetter extends Application implements AudioProcessor {
                 if (confirmationResult.get() == ButtonType.OK) {
                     System.out.println("Saving threshold level: " + threshold);
                     accountUtils.saveThreshold(currentAccount.getUserName(), threshold);
+                    currentAccount.setThreshold(threshold);
                     new ExerciseSelection().initializeAndStart(primaryStage, currentAccount);
                 }
             });
@@ -115,6 +113,7 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         cancelButton.setText("Cancel");
         cancelButton.setOnAction(e -> {
             // TODO: hitting the cancel button should move user to exercise picking screen
+            // TODO: cancel should not be shown if user came from registration. Maybe a boolean firstRegistration for the initializer method?
             System.out.println("Need to add routing to exercise picking screen");
         });
 
@@ -126,8 +125,8 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         Scene scene = new Scene(grid);
         primaryStage.setTitle("EstonianVowelCAPT");
         primaryStage.setScene(scene);
-        primaryStage.setWidth(550);
-        primaryStage.setHeight(600);
+        primaryStage.setWidth(500);
+        primaryStage.setHeight(625);
         primaryStage.setOnCloseRequest(t -> {
             Platform.exit();
             System.exit(0);
@@ -137,7 +136,7 @@ public class ThresholdSetter extends Application implements AudioProcessor {
 
     private void startAudioDispatching() {
         try {
-            final AudioFormat format = getAudioFormat();
+            final AudioFormat format = AudioUtils.getAudioFormat();
             DataLine.Info info = new DataLine.Info(
                     TargetDataLine.class, format);
             final TargetDataLine line;
@@ -151,11 +150,8 @@ public class ThresholdSetter extends Application implements AudioProcessor {
             final AudioInputStream stream = new AudioInputStream(line);
 
             JVMAudioInputStream audioStream = new JVMAudioInputStream(stream);
-            // create a new dispatcher
             AudioDispatcher dispatcher = new AudioDispatcher(audioStream, 1024,
                     0);
-
-            // add a processor
 
             dispatcher.addAudioProcessor(silenceDetector);
             silenceDetector = new SilenceDetector(threshold, false);
@@ -181,16 +177,6 @@ public class ThresholdSetter extends Application implements AudioProcessor {
     @Override
     public void processingFinished() {
 
-    }
-
-    private AudioFormat getAudioFormat() {
-        float sampleRate = 22050;
-        int sampleSizeInBits = 16;
-        int channels = 1;
-        boolean signed = true;
-        boolean bigEndian = true;
-        return new AudioFormat(sampleRate,
-                sampleSizeInBits, channels, signed, bigEndian);
     }
 
     public void initializeAndStart(Stage primaryStage, Account account) {

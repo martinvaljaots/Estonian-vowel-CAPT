@@ -87,4 +87,16 @@ public class AccountUtils {
             e.printStackTrace();
         }
     }
+
+    public double getThreshold(String userName) {
+        Path path = FileSystems.getDefault().getPath("resources/accounts/" + userName + "/threshold.txt");
+        try {
+            return Files.lines(path)
+                    .mapToDouble(Double::parseDouble).sum();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return 0.0;
+    }
 }

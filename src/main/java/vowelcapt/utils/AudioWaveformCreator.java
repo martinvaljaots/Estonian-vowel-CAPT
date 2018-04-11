@@ -1,8 +1,7 @@
-package vowelcapt.necessaryexamples;
+package vowelcapt.utils;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.*;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineBreakMeasurer;
@@ -18,6 +17,11 @@ import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.util.Vector;
 
+/**
+ * Code from Stack Overflow:
+ * https://stackoverflow.com/a/11024268
+ * Modified to suite the current application's needs.
+ */
 
 public class AudioWaveformCreator {
     AudioInputStream audioInputStream;
@@ -26,27 +30,31 @@ public class AudioWaveformCreator {
     Capture capture = new Capture();
     double duration, seconds;
     //File file;
-    String fileName = "out.png";
+    String fileNameAndPath = "out.png";
     SamplingGraph samplingGraph;
     String waveformFilename;
-    Color imageBackgroundColor = new Color(20,20,20);
+    Color imageBackgroundColor = new Color(225,225,225);
 
-    public AudioWaveformCreator(File file, String waveformFilename) throws Exception {
+    public AudioWaveformCreator(File file, String waveformFilenameAndPath) {
         if (file != null) {
+            fileNameAndPath = waveformFilenameAndPath;
             try {
                 errStr = null;
                 audioInputStream = AudioSystem.getAudioInputStream(file);
                 long milliseconds = (long)((audioInputStream.getFrameLength() * 1000) / audioInputStream.getFormat().getFrameRate());
                 duration = milliseconds / 1000.0;
                 samplingGraph = new SamplingGraph();
-                samplingGraph.createWaveForm(null);
             } catch (Exception ex) {
                 reportStatus(ex.toString());
-                throw ex;
+                ex.printStackTrace();
             }
         } else {
             reportStatus("Audio file required.");
         }
+    }
+
+    public boolean createWaveImage() {
+        return samplingGraph.createWaveForm(null);
     }
     /**
      * Render a WaveForm.
@@ -64,7 +72,7 @@ public class AudioWaveformCreator {
         }
 
 
-        public void createWaveForm(byte[] audioBytes) {
+        public boolean createWaveForm(byte[] audioBytes) {
 
             lines.removeAllElements();  // clear the old vector
 
@@ -77,7 +85,7 @@ public class AudioWaveformCreator {
                     audioInputStream.read(audioBytes);
                 } catch (Exception ex) {
                     reportStatus(ex.getMessage());
-                    return;
+                    return false;
                 }
             }
             int w = 500;
@@ -132,14 +140,15 @@ public class AudioWaveformCreator {
                 lines.add(new Line2D.Double(x, y_last, x, y_new));
                 y_last = y_new;
             }
-            saveToFile();
+            boolean hasSavingBeenCompleted = saveToFile();
+            return hasSavingBeenCompleted;
         }
 
 
-        public void saveToFile() {
-            int w = 500;
+        public boolean saveToFile() {
+            int w = 400;
             int h = 200;
-            int INFOPAD = 15;
+            int INFOPAD = 0;
 
             BufferedImage bufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
             Graphics2D g2 = bufferedImage.createGraphics();
@@ -149,13 +158,16 @@ public class AudioWaveformCreator {
             // Write generated image to a file
             try {
                 // Save as PNG
-                File file = new File(fileName);
+                File file = new File(fileNameAndPath);
                 System.out.println(file.getAbsolutePath());
                 ImageIO.write(bufferedImage, "png", file);
-                JOptionPane.showMessageDialog(null,
-                        new JLabel(new ImageIcon(fileName)));
+                return true;
+                //JOptionPane.showMessageDialog(null, new JLabel(new ImageIcon(fileNameAndPath)));
             } catch (IOException e) {
+                System.out.println("IOException!\n");
+                e.printStackTrace();
             }
+            return false;
         }
 
 
@@ -191,7 +203,7 @@ public class AudioWaveformCreator {
             } else {
                 g2.setColor(Color.black);
                 g2.setFont(font12);
-                //g2.drawString("File: " + fileName + "  Length: " + String.valueOf(duration) + "  Position: " + String.valueOf(seconds), 3, h-4);
+                //g2.drawString("File: " + fileNameAndPath + "  Length: " + String.valueOf(duration) + "  Position: " + String.valueOf(seconds), 3, h-4);
 
                 if (audioInputStream != null) {
                     // .. render sampling graph ..

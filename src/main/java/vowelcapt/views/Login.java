@@ -3,6 +3,7 @@ package vowelcapt.views;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -14,6 +15,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import vowelcapt.utils.Account;
 import vowelcapt.utils.AccountUtils;
@@ -24,6 +26,10 @@ public class Login extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+
+        Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+        primaryStage.setX(600);
+        primaryStage.setY(100);
 
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
@@ -72,6 +78,8 @@ public class Login extends Application {
                 Optional<Account> accountOptional = accountUtils
                         .attemptLogin(userNameField.getText(), passwordField.getText());
                 if (accountOptional.isPresent()) {
+                    Account account = accountOptional.get();
+                    account.setThreshold(accountUtils.getThreshold(account.getUserName()));
                     new ExerciseSelection().initializeAndStart(primaryStage, accountOptional.get());
 
                 } else {

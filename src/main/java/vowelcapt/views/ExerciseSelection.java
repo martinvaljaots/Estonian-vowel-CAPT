@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
@@ -31,6 +32,13 @@ public class ExerciseSelection extends Application {
 
         Label currentUserLabel = new Label("Currently logged in as " + currentAccount.getUserName());
         grid.add(currentUserLabel, 0, 1);
+
+        Button firstExerciseButton = new Button("Pronunciation exercise: a");
+        firstExerciseButton.setOnAction(e -> {
+            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "maam", 'a');
+        });
+
+        grid.add(firstExerciseButton, 0, 2);
 
         Scene scene = new Scene(grid, 400, 300);
         primaryStage.setTitle("EstonianVowelCAPT");
