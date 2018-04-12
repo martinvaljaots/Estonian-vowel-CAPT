@@ -40,6 +40,7 @@ public class ThresholdSetter extends Application implements AudioProcessor {
     private AccountUtils accountUtils = new AccountUtils();
     //TODO: remove this test account before user testing
     private Account currentAccount = new Account("test", "test", "male");
+    private boolean isFirstRegistration = false;
 
     @Override
     public void start(Stage primaryStage) {
@@ -94,52 +95,13 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         confirmationAlert.setTitle("Microphone volume level confirmation");
         confirmationAlert.setHeaderText("Saving current microphone volume level");
         confirmationAlert.setContentText("Are you sure? \nThis level can also be changed in the exercise selection screen.");
-
-        Button saveButton = new Button();
-        saveButton.setText("Save");
-        saveButton.setOnAction(e -> {
-            Optional<ButtonType> confirmationResult = confirmationAlert.showAndWait();
-            confirmationResult.ifPresent(a -> {
-                if (confirmationResult.get() == ButtonType.OK) {
-                    System.out.println("Saving threshold level: " + threshold);
-                    accountUtils.saveThreshold(currentAccount.getUserName(), threshold);
-                    currentAccount.setThreshold(threshold);
-                    new ExerciseSelection().initializeAndStart(primaryStage, currentAccount);
-                }
-            });
-        });
-
-        Button cancelButton = new Button();
-        cancelButton.setText("Cancel");
-        cancelButton.setOnAction(e -> {
-            // TODO: hitting the cancel button should move user to exercise picking screen
-            // TODO: cancel should not be shown if user came from registration. Maybe a boolean firstRegistration for the initializer method?
-            System.out.println("Need to add routing to exercise picking screen");
-        });
-
-        HBox hBox = new HBox(25);
-        hBox.getChildren().addAll(saveButton, cancelButton);
-        grid.add(hBox, 0, 4);
-        startAudioDispatching();
-
-        Scene scene = new Scene(grid);
-        primaryStage.setTitle("EstonianVowelCAPT");
-        primaryStage.setScene(scene);
-        primaryStage.setWidth(500);
-        primaryStage.setHeight(625);
-        primaryStage.setOnCloseRequest(t -> {
-            Platform.exit();
-            System.exit(0);
-        });
-        primaryStage.show();
-    }
-
-    private void startAudioDispatching() {
+        final TargetDataLine line;
+        final AudioFormat format = AudioUtils.getAudioFormat();
+        DataLine.Info info = new DataLine.Info(
+                TargetDataLine.class, format);
         try {
-            final AudioFormat format = AudioUtils.getAudioFormat();
-            DataLine.Info info = new DataLine.Info(
-                    TargetDataLine.class, format);
-            final TargetDataLine line;
+
+
 
             line = (TargetDataLine)
                     AudioSystem.getLine(info);
@@ -159,9 +121,54 @@ public class ThresholdSetter extends Application implements AudioProcessor {
             dispatcher.addAudioProcessor(this);
 
             new Thread(dispatcher, "Audio dispatching").start();
+
+            Button saveButton = new Button();
+            saveButton.setText("Save");
+            saveButton.setOnAction(e -> {
+                Optional<ButtonType> confirmationResult = confirmationAlert.showAndWait();
+                confirmationResult.ifPresent(a -> {
+                    if (confirmationResult.get() == ButtonType.OK) {
+                        System.out.println("Saving threshold level: " + threshold);
+                        accountUtils.saveThreshold(currentAccount.getUserName(), threshold);
+                        currentAccount.setThreshold(threshold);
+                        line.stop();
+                        line.close();
+                        new ExerciseSelection().initializeAndStart(primaryStage, currentAccount);
+                    }
+                });
+            });
+
+            Button cancelButton = new Button();
+            cancelButton.setText("Cancel");
+            cancelButton.setOnAction(e -> {
+                line.stop();
+                line.close();
+                primaryStage.setWidth(300);
+                primaryStage.setHeight(300);
+                new ExerciseSelection().initializeAndStart(primaryStage, currentAccount);
+            });
+
+            HBox hBox = new HBox(25);
+            if (isFirstRegistration) {
+                hBox.getChildren().add(saveButton);
+            } else {
+                hBox.getChildren().addAll(saveButton, cancelButton);
+            }
+            grid.add(hBox, 0, 4);
         } catch (LineUnavailableException e) {
             e.printStackTrace();
         }
+
+        Scene scene = new Scene(grid);
+        primaryStage.setTitle("EstonianVowelCAPT");
+        primaryStage.setScene(scene);
+        primaryStage.setWidth(500);
+        primaryStage.setHeight(625);
+        primaryStage.setOnCloseRequest(t -> {
+            Platform.exit();
+            System.exit(0);
+        });
+        primaryStage.show();
     }
 
     public static void main(String[] args) {
@@ -179,8 +186,9 @@ public class ThresholdSetter extends Application implements AudioProcessor {
 
     }
 
-    public void initializeAndStart(Stage primaryStage, Account account) {
+    public void initializeAndStart(Stage primaryStage, Account account, boolean isFirstRegistration) {
         currentAccount = account;
+        this.isFirstRegistration = isFirstRegistration;
         start(primaryStage);
     }
 }

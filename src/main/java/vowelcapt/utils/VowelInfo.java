@@ -3,23 +3,43 @@ package vowelcapt.utils;
 public class VowelInfo {
 
     private char vowel;
-    private double[] formantValues;
+    private double firstFormantMean;
+    private double firstFormantSd;
+    private double secondFormantMean;
+    private double secondFormantSd;
 
-    public VowelInfo(char vowel, double[] formantValues) {
+    public VowelInfo(char vowel, double firstFormantMean, double firstFormantSd,
+                     double secondFormantMean, double secondFormantSd) {
         this.vowel = vowel;
-        this.formantValues = formantValues;
+        this.firstFormantMean = firstFormantMean;
+        this.firstFormantSd = firstFormantSd;
+        this.secondFormantMean = secondFormantMean;
+        this.secondFormantSd = secondFormantSd;
     }
 
     public char getVowel() {
         return vowel;
     }
 
-    public double[] getFormantValues() {
-        return formantValues;
+    public double getFirstFormantMean() {
+        return firstFormantMean;
+    }
+
+    public double getFirstFormantSd() {
+        return firstFormantSd;
+    }
+
+    public double getSecondFormantMean() {
+        return secondFormantMean;
+    }
+
+    public double getSecondFormantSd() {
+        return secondFormantSd;
     }
 
     @Override
     public String toString() {
-        return vowel + " " + formantValues[0] + " " + formantValues[1];
+        return vowel + " first formant mean: " + firstFormantMean + " first formant SD: " + firstFormantSd
+                + " second formant mean: " + secondFormantMean + " second formant SD: " + secondFormantSd;
     }
 }

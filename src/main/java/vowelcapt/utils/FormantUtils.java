@@ -8,6 +8,7 @@ import de.fau.cs.jstk.sampled.RawAudioFormat;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,21 +19,33 @@ import static java.util.stream.Collectors.toList;
 
 public class FormantUtils {
 
-    private List<VowelInfo> vowels = new ArrayList<>();
+    private List<VowelInfo> maleVowels = new ArrayList<>();
+    private List<VowelInfo> femaleVowels = new ArrayList<>();
 
     public FormantUtils() {
         initializeVowelInfo();
     }
 
     private void initializeVowelInfo() {
-        //TODO: add sex based vowel info initialization
-        Path path = FileSystems.getDefault().getPath("resources/formant_values/male.csv");
+        Path maleVowelsPath = FileSystems.getDefault().getPath("resources/formant_values/male.csv");
+        Path femaleVowelsPath = FileSystems.getDefault().getPath("resources/formant_values/female.csv");
+
+        Charset charset = Charset.forName("ISO-8859-1");
+
         try {
-            vowels = Files.lines(path)
+            maleVowels = Files.lines(maleVowelsPath, charset)
                     .skip(1)
                     .map(mapToVowelInfo)
                     .collect(toList());
-            vowels.forEach(System.out::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            femaleVowels = Files.lines(femaleVowelsPath, charset)
+                    .skip(1)
+                    .map(mapToVowelInfo)
+                    .collect(toList());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,12 +54,15 @@ public class FormantUtils {
     private static Function<String, VowelInfo> mapToVowelInfo = (line) -> {
         String[] vowelInfoStringArray = line.split(";");
         char vowel = vowelInfoStringArray[0].charAt(0);
-        double firstFormantValue = Double.parseDouble(vowelInfoStringArray[1]);
-        double secondFormantValue = Double.parseDouble(vowelInfoStringArray[2]);
-        return new VowelInfo(vowel, new double[]{firstFormantValue, secondFormantValue});
+        double firstFormantMeanValue = Double.parseDouble(vowelInfoStringArray[1]);
+        double firstFormantSdValue = Double.parseDouble(vowelInfoStringArray[2]);
+        double secondFormantMeanValue = Double.parseDouble(vowelInfoStringArray[3]);
+        double secondFormantSdValue = Double.parseDouble(vowelInfoStringArray[4]);
+        return new VowelInfo(vowel, firstFormantMeanValue, firstFormantSdValue,
+                secondFormantMeanValue, secondFormantSdValue);
     };
 
-    public double[] findFormants(String userName, char vowel) {
+    public double[] findFormants(String userName, String userGender, char vowel) {
         String filePath = "resources/accounts/" + userName + "/" + vowel + "_justVowel.wav";
         try {
             AudioSource as = new AudioFileReader(filePath,
@@ -73,8 +89,8 @@ public class FormantUtils {
                 secondFormantValues.add(buf[1]);
             }
 
-            double firstFormantAverage = calculateAverageFormantValue(1, firstFormantValues, vowel);
-            double secondFormantAverage = calculateAverageFormantValue(2, secondFormantValues, vowel);
+            double firstFormantAverage = calculateAverageFormantValue(userGender,1, firstFormantValues, vowel);
+            double secondFormantAverage = calculateAverageFormantValue(userGender,2, secondFormantValues, vowel);
             System.out.println(firstFormantAverage);
             System.out.println(secondFormantAverage);
             return new double[]{firstFormantAverage, secondFormantAverage};
@@ -85,21 +101,67 @@ public class FormantUtils {
         return new double[]{0, 0};
     }
 
-    private double calculateAverageFormantValue(int formant, List<Double> formantValues, char vowel) {
+    private double calculateAverageFormantValue(String gender, int formant, List<Double> formantValues, char vowel) {
+        List<VowelInfo> vowels;
+        if (gender.equals("male")) {
+            vowels = maleVowels;
+        } else vowels = femaleVowels;
         OptionalDouble averageFormantValue = OptionalDouble.empty();
         Optional<VowelInfo> vowelInfoOptional = vowels.stream()
                 .filter(e -> e.getVowel() == vowel)
                 .findAny();
 
         if (vowelInfoOptional.isPresent()) {
-            double formantStatisticalAverageValue = vowelInfoOptional.get().getFormantValues()[formant - 1];
+            double formantStatisticalMeanValue;
+            if (formant == 1) {
+                formantStatisticalMeanValue = vowelInfoOptional.get().getFirstFormantMean();
+            } else formantStatisticalMeanValue = vowelInfoOptional.get().getSecondFormantMean();
+
+            System.out.println("Vowel: " + vowel + " " + formant + ". formant mean value: " + formantStatisticalMeanValue);
 
             averageFormantValue = formantValues.stream()
-                    .filter(e -> e >= formantStatisticalAverageValue - 200 * formant && e <= formantStatisticalAverageValue + 200 * formant)
+                    .filter(e -> e >= formantStatisticalMeanValue - 250 * formant
+                            && e <= formantStatisticalMeanValue + 250 * formant)
                     .mapToDouble(e -> e)
                     .average();
         }
 
         return averageFormantValue.isPresent() ? averageFormantValue.getAsDouble() : 0;
+    }
+
+    public boolean isWithinStandardDeviation(char vowel, String gender,
+                                             double firstFormantAverageValue, double secondFormantAverageValue) {
+        List<VowelInfo> vowels;
+        VowelInfo vowelInfo;
+        if (gender.equals("male")) {
+            vowels = maleVowels;
+        } else vowels = femaleVowels;
+
+        Optional<VowelInfo> vowelInfoOptional = vowels.stream()
+                .filter(e -> e.getVowel() == vowel)
+                .findAny();
+
+        if (vowelInfoOptional.isPresent()) {
+            vowelInfo = vowelInfoOptional.get();
+            boolean isFirstFormantWithinStandardDeviation =
+                    firstFormantAverageValue >= firstFormantAverageValue - vowelInfo.getFirstFormantSd()
+                    && firstFormantAverageValue <= firstFormantAverageValue + vowelInfo.getFirstFormantSd();
+
+            boolean isSecondFormantWithinStandardDeviation =
+                    secondFormantAverageValue >= secondFormantAverageValue - vowelInfo.getSecondFormantSd()
+                    && secondFormantAverageValue <= secondFormantAverageValue + vowelInfo.getSecondFormantSd();
+
+            System.out.println("F1 value: " + firstFormantAverageValue + " is within "
+                    + vowelInfo.getFirstFormantMean() + " +- " + vowelInfo.getFirstFormantSd() +  " : "
+                    + isFirstFormantWithinStandardDeviation);
+
+            System.out.println("F2 value: " + secondFormantAverageValue + " is within "
+                    + vowelInfo.getSecondFormantMean() + " +- " + vowelInfo.getSecondFormantSd() +  " : "
+                    + isFirstFormantWithinStandardDeviation);
+
+            return isFirstFormantWithinStandardDeviation && isSecondFormantWithinStandardDeviation;
+        }
+
+        return false;
     }
 }

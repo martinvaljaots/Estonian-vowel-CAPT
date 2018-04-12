@@ -13,6 +13,9 @@ import javafx.embed.swing.SwingNode;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.chart.BubbleChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -32,15 +35,17 @@ import java.io.*;
 
 
 // TODO: remove graph panel from this view entirely once ThresholdSetter is properly implemented
-// TODO: scene titles to tell where you even are
-// TODO: make this usable with any word - string that gets used for label, playback, char that is used for formant finding etc
-// the last todo can only be tested after this exercise is called for ExerciseSelection
+// TODO: make an AudioProcessor version of this
+// TODO: link the bubble chart to results from the analysis
 public class PronunciationExercise extends Application implements PitchDetectionHandler {
 
     private final Button recordButton = new Button("Record");
     private final Button playBackButton = new Button("Play back");
     private final Button listenButton = new Button("Listen");
     private final GraphPanel graphPanel = new GraphPanel(-80);
+    private final BubbleChart formantChart = setUpFormantChart();
+    private XYChart.Series userResults = new XYChart.Series();
+    private XYChart.Series nativeResults = new XYChart.Series();
     private FormantUtils formantUtils = new FormantUtils();
     private ByteArrayOutputStream out;
     private ByteArrayOutputStream vowelOut;
@@ -70,7 +75,6 @@ public class PronunciationExercise extends Application implements PitchDetection
 
         //grid.add(formantInfo, 0, 2);
 
-        //TODO: either fix spacing for this or put pronounce the word and the word in an hbox too
         HBox hBox = new HBox(15);
         hBox.setAlignment(Pos.BOTTOM_RIGHT);
         hBox.getChildren().addAll(listenButton, recordButton, playBackButton);
@@ -143,7 +147,6 @@ public class PronunciationExercise extends Application implements PitchDetection
                                 if (count > 0) {
                                     byte secondBuffer[] = buffer;
                                     out.write(buffer, 0, count);
-                                    // TODO: implement threshold
                                     if (SilenceDetectorCurrentSPL.get() > threshold && HasPitchBeenDetected.get()) {
                                         vowelOut.write(secondBuffer, 0, count);
                                     }
@@ -180,14 +183,17 @@ public class PronunciationExercise extends Application implements PitchDetection
                                 e1.printStackTrace();
                             }
 
-                            double[] formantResults = formantUtils.findFormants(currentAccount.getUserName(), vowel);
-                            String recordingPath = userPath + vowel + "_last.wav";
-                            String waveFormPath = userPath + vowel + "_img.png";
-                            AudioWaveformCreator audioWaveformCreator = new AudioWaveformCreator(new File(recordingPath), waveFormPath);
-                            boolean isWaveFormCreated = audioWaveformCreator.createWaveImage();
-                            System.out.println(isWaveFormCreated);
-                            // TODO: implement checking of whether this is the best result
-                            accountUtils.saveResult(currentAccount.getUserName(), vowel, false, formantResults);
+                            double[] formantResults = formantUtils.findFormants(currentAccount.getUserName(),
+                                    currentAccount.getGender(), vowel);
+                            //String recordingPath = userPath + vowel + "_last.wav";
+                            //String waveFormPath = userPath + vowel + "_img.png";
+                            System.out.println(formantUtils.isWithinStandardDeviation(vowel,
+                                    currentAccount.getGender(), formantResults[0], formantResults[1]));
+                            //AudioWaveformCreator audioWaveformCreator = new AudioWaveformCreator(new File(recordingPath), waveFormPath);
+                           // boolean isWaveFormCreated = audioWaveformCreator.createWaveImage();
+                            //System.out.println(isWaveFormCreated);
+                            // TODO: don't save this result but things here should be logged
+                            //accountUtils.saveResult(currentAccount.getUserName(), vowel, false, formantResults);
                         }
                     };
                     Thread captureThread = new Thread(runner);
@@ -195,6 +201,9 @@ public class PronunciationExercise extends Application implements PitchDetection
                 } catch (LineUnavailableException e1) {
                     e1.printStackTrace();
                 }
+                //userResults.getData().clear();
+                userResults.getData().add(new XYChart.Data(1711,586,20));
+                //formantChart.getData().add(userResults);
             } else {
                 IsRecording.set(false);
                 formantInfo.setText("Recording stopped.");
@@ -251,8 +260,16 @@ public class PronunciationExercise extends Application implements PitchDetection
             }
         });
 
+        nativeResults = setUpNativePronunciationBubble();
+        formantChart.getData().add(nativeResults);
+
+        userResults.setName("Your pronunciation of /" + vowel + "/");
+        userResults.getData().add(new XYChart.Data(2000,500, 10));
+        formantChart.getData().add(userResults);
+        grid.add(formantChart, 3, 0);
+
         Scene scene = new Scene(grid);
-        primaryStage.setTitle("EstonianVowelCAPT");
+        primaryStage.setTitle("EstonianVowelCAPT - Pronunciation: " + vowel);
         primaryStage.setScene(scene);
         primaryStage.setWidth(600);
         primaryStage.setHeight(700);
@@ -282,8 +299,37 @@ public class PronunciationExercise extends Application implements PitchDetection
         }
     }
 
+    private BubbleChart setUpFormantChart() {
+        // Example of creating bubble chart https://www.tutorialspoint.com/javafx/bubble_chart.htm
+
+        NumberAxis xAxis = new NumberAxis(500, 3000, 500);
+        xAxis.setLabel("F2");
+
+        NumberAxis yAxis = new NumberAxis(200, 900, 100);
+        yAxis.setLabel("F1");
+
+        BubbleChart formantChart = new BubbleChart(xAxis, yAxis);
+
+        return formantChart;
+    }
+
+    private XYChart.Series setUpNativePronunciationBubble() {
+        XYChart.Series series = new XYChart.Series();
+        series.setName("Native pronunciation of /" + vowel + "/");
+
+        series.getData().add(new XYChart.Data(1111,586,80));
+        series.getData().add(new XYChart.Data(25,40,5));
+        series.getData().add(new XYChart.Data(40,50,9));
+        series.getData().add(new XYChart.Data(55,60,7));
+        series.getData().add(new XYChart.Data(70,70,9));
+        series.getData().add(new XYChart.Data(85,80,6));
+
+        return series;
+    }
+
+
+
     public void initializeAndStart(Stage primaryStage, Account account, String word, char vowel) {
-        //TODO: account needs to hold threshold and it needs to be set here
         this.word = word;
         currentAccount = account;
         threshold = account.getThreshold();

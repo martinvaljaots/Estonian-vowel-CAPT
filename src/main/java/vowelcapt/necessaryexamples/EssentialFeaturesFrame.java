@@ -1,10 +1,15 @@
-package vowelcapt;
+package vowelcapt.necessaryexamples;
 
 import be.tarsos.dsp.*;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.util.fft.FFT;
 import vowelcapt.panels.*;
+import vowelcapt.panels.InputPanel;
+import vowelcapt.panels.PitchDetectorExample;
+import vowelcapt.panels.Shared;
+import vowelcapt.panels.SoundDetector;
+import vowelcapt.panels.Spectrogram;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
@@ -25,12 +30,12 @@ public class EssentialFeaturesFrame extends JFrame {
     int bufferSize = 1024 * 4;
     int overlap = 768 * 4;
     Mixer currentMixer;
-    SoundDetector soundDetector;
+    vowelcapt.panels.SoundDetector soundDetector;
     AudioDispatcher dispatcher;
     double threshold = -80;
     SilenceDetector silenceDetector;
-    PitchDetectorExample pitchDetector;
-    Spectrogram spectrogram;
+    vowelcapt.panels.PitchDetectorExample pitchDetector;
+    vowelcapt.panels.Spectrogram spectrogram;
     AudioProcessor fftProcessor;
     Capture audioCapture;
     public double pitch;

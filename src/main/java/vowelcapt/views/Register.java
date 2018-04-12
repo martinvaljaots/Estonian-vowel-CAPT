@@ -14,6 +14,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import vowelcapt.utils.Account;
+import vowelcapt.utils.AccountUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +27,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Register extends Application {
+
+    private AccountUtils accountUtils = new AccountUtils();
 
     @Override
     public void start(Stage primaryStage) {
@@ -75,6 +78,8 @@ public class Register extends Application {
         grid.add(genderSelectionLabel, 0, 4);
 
         final ComboBox genderSelect = new ComboBox(FXCollections.observableArrayList("Male", "Female"));
+        Tooltip genderToolTip = new Tooltip("Gender is used to evaluate\nyour pronunciation.");
+        genderSelect.setTooltip(genderToolTip);
         grid.add(genderSelect, 1, 4);
 
         Alert continuationAlert = new Alert(Alert.AlertType.INFORMATION);
@@ -86,7 +91,11 @@ public class Register extends Application {
         final Text actiontarget = new Text();
         grid.add(actiontarget, 1, 6);
         registerBtn.setOnAction(e -> {
-            if (!passwordField.getText().equals(passwordAgainField.getText())) {
+            if (accountUtils.accountExists(userNameField.getText())) {
+                actiontarget.setFill(Color.FIREBRICK);
+                actiontarget.setText("Username already in use!");
+            }
+            else if (!passwordField.getText().equals(passwordAgainField.getText())) {
                 actiontarget.setFill(Color.FIREBRICK);
                 actiontarget.setText("Passwords don't match!");
             } else if (userNameField.getText().equals("")
@@ -96,17 +105,18 @@ public class Register extends Application {
                 actiontarget.setFill(Color.FIREBRICK);
                 actiontarget.setText("All fields are mandatory!");
             } else {
+                actiontarget.setText("");
                 Account account = new Account(userNameField.getText(), passwordField.getText(),
                         genderSelect.getValue().toString().toLowerCase());
                 registerUser(account);
                 continuationAlert.showAndWait();
                 ThresholdSetter thresholdSetter = new ThresholdSetter();
-                thresholdSetter.initializeAndStart(primaryStage, account);
+                thresholdSetter.initializeAndStart(primaryStage, account, true);
             }
         });
 
         Scene scene = new Scene(grid, 400, 300);
-        primaryStage.setTitle("EstonianVowelCAPT");
+        primaryStage.setTitle("EstonianVowelCAPT - Registration");
         primaryStage.setScene(scene);
         primaryStage.show();
     }

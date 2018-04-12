@@ -1,10 +1,10 @@
-ï»¿Vowel;First formant value;Second formant value;Third formant value
-a;650;1000;2460
-e;400;1950;2580
-i;250;2220;3000
-o;450;800;2400
-u;300;660;2200
-Ãµ;380;1150;2250
-Ã¤;670;1550;2400
-Ã¶;410;1550;2250
-Ã¼;260;1750;2160
+Vowel;First formant mean value;First formant standard deviation;Second formant mean value;Second formant standard deviation
+a;586;61;1111;105
+e;446;51;1760;169
+i;314;37;2084;122
+o;479;41;929;164
+u;378;42;844;161
+õ;439;33;1248;94
+ä;578;70;1507;145
+ö;421;30;1536;71
+ü;317;29;1667;92

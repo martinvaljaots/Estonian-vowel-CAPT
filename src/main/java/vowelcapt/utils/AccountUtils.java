@@ -22,10 +22,10 @@ public class AccountUtils {
     }
 
     private void initializeAccountsList() {
-
         Path path = FileSystems.getDefault().getPath("resources/accounts/acc.csv");
+        Charset charset = Charset.forName("ISO-8859-1");
         try {
-            accounts = Files.lines(path)
+            accounts = Files.lines(path, charset)
                     .skip(1)
                     .map(mapToAccount)
                     .collect(toList());
@@ -98,5 +98,10 @@ public class AccountUtils {
         }
 
         return 0.0;
+    }
+
+    public boolean accountExists(String userName) {
+        return accounts.stream()
+                .anyMatch(e -> e.getUserName().equals(userName));
     }
 }

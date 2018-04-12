@@ -33,15 +33,34 @@ public class ExerciseSelection extends Application {
         Label currentUserLabel = new Label("Currently logged in as " + currentAccount.getUserName());
         grid.add(currentUserLabel, 0, 1);
 
+        Label pronunciationExerciseLabel = new Label("Pronunciation exercises:");
+        pronunciationExerciseLabel.setFont(Font.font("Tahoma", FontWeight.NORMAL, 14));
+        grid.add(pronunciationExerciseLabel, 0, 3);
+
         Button firstExerciseButton = new Button("Pronunciation exercise: a");
         firstExerciseButton.setOnAction(e -> {
             new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "maam", 'a');
         });
 
-        grid.add(firstExerciseButton, 0, 2);
+        grid.add(firstExerciseButton, 0, 4);
 
-        Scene scene = new Scene(grid, 400, 300);
-        primaryStage.setTitle("EstonianVowelCAPT");
+        Label listeningExercisesLabel = new Label("Listening exercises:");
+        listeningExercisesLabel.setFont(Font.font("Tahoma", FontWeight.NORMAL, 14));
+        grid.add(listeningExercisesLabel, 0, 5);
+
+        Label settingsLabel = new Label("Settings:");
+        settingsLabel.setFont(Font.font("Tahoma", FontWeight.NORMAL, 14));
+        grid.add(settingsLabel, 0, 6);
+
+        Button thresholdReadjustButton = new Button("Adjust microphone level");
+        thresholdReadjustButton.setOnAction(e -> {
+            new ThresholdSetter().initializeAndStart(primaryStage, currentAccount, false);
+        });
+
+        grid.add(thresholdReadjustButton, 0, 7);
+
+        Scene scene = new Scene(grid, 300, 300);
+        primaryStage.setTitle("EstonianVowelCAPT - Exercise selection");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
