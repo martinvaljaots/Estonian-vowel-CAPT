@@ -144,12 +144,12 @@ public class FormantUtils {
         if (vowelInfoOptional.isPresent()) {
             vowelInfo = vowelInfoOptional.get();
             boolean isFirstFormantWithinStandardDeviation =
-                    firstFormantAverageValue >= firstFormantAverageValue - vowelInfo.getFirstFormantSd()
-                    && firstFormantAverageValue <= firstFormantAverageValue + vowelInfo.getFirstFormantSd();
+                    firstFormantAverageValue >= vowelInfo.getFirstFormantMean() - vowelInfo.getFirstFormantSd()
+                    && firstFormantAverageValue <= vowelInfo.getFirstFormantMean() + vowelInfo.getFirstFormantSd();
 
             boolean isSecondFormantWithinStandardDeviation =
-                    secondFormantAverageValue >= secondFormantAverageValue - vowelInfo.getSecondFormantSd()
-                    && secondFormantAverageValue <= secondFormantAverageValue + vowelInfo.getSecondFormantSd();
+                    secondFormantAverageValue >= vowelInfo.getSecondFormantMean() - vowelInfo.getSecondFormantSd()
+                    && secondFormantAverageValue <= vowelInfo.getSecondFormantMean() + vowelInfo.getSecondFormantSd();
 
             System.out.println("F1 value: " + firstFormantAverageValue + " is within "
                     + vowelInfo.getFirstFormantMean() + " +- " + vowelInfo.getFirstFormantSd() +  " : "
