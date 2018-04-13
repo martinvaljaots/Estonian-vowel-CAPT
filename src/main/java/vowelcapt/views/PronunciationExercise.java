@@ -21,6 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Font;
@@ -37,6 +38,7 @@ import java.io.*;
 // TODO: remove graph panel from this view entirely once ThresholdSetter is properly implemented
 // TODO: make an AudioProcessor version of this
 // TODO: link the bubble chart to results from the analysis
+// TODO: make the layout pretty
 public class PronunciationExercise extends Application implements PitchDetectionHandler {
 
     private final Button recordButton = new Button("Record");
@@ -73,12 +75,27 @@ public class PronunciationExercise extends Application implements PitchDetection
         wordLabel.setFont(Font.font("Arial", 30));
         grid.add(wordLabel, 0, 1);
 
+        VBox animationVBox = new VBox();
+
+        Animation ani = new AnimatedGif("resources/animations/" + vowel + ".gif", 1000);
+        ani.setCycleCount(1);
+
+        Button playBtn = new Button( "Play animation of " + vowel);
+        playBtn.setOnAction( e -> ani.play());
+
+        HBox playHBox = new HBox();
+        playHBox.setAlignment(Pos.CENTER);
+        playHBox.getChildren().add(playBtn);
+
+        animationVBox.getChildren().addAll( ani.getView(), playHBox);
+        grid.add(animationVBox, 0, 2);
+
         //grid.add(formantInfo, 0, 2);
 
-        HBox hBox = new HBox(15);
-        hBox.setAlignment(Pos.BOTTOM_RIGHT);
+        HBox hBox = new HBox(25);
+        hBox.setAlignment(Pos.CENTER);
         hBox.getChildren().addAll(listenButton, recordButton, playBackButton);
-        grid.add(hBox, 0, 2);
+        grid.add(hBox, 0, 3);
 
         graphPanel.setSize(300, 400);
         final SwingNode swingNode = new SwingNode();
@@ -266,7 +283,7 @@ public class PronunciationExercise extends Application implements PitchDetection
         userResults.setName("Your pronunciation of /" + vowel + "/");
         userResults.getData().add(new XYChart.Data(2000,500, 10));
         formantChart.getData().add(userResults);
-        grid.add(formantChart, 3, 0);
+        grid.add(formantChart, 1, 0, 1, 3);
 
         Scene scene = new Scene(grid);
         primaryStage.setTitle("EstonianVowelCAPT - Pronunciation: " + vowel);
