@@ -13,7 +13,9 @@ import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) {
-
+        //TODO: refactor this to have login screen start
+        //TODO: remove examples and unnecessary files once finished with the application
+        //TODO: leave NO TODOS BEHIND
 
         String[] trial = new String[]{"AK/Record-e.wav", "3"};
         try {

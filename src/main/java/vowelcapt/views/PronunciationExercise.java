@@ -54,9 +54,9 @@ public class PronunciationExercise extends Application implements PitchDetection
     private Label formantInfo = new Label();
     private SilenceDetector silenceDetector = new SilenceDetector();
     private AccountUtils accountUtils = new AccountUtils();
-    private String word = "maam";
+    private String word = "võõp";
     private Account currentAccount = new Account("test", "test", "male");
-    private char vowel = 'a';
+    private char vowel = 'õ';
     private String userPath = "resources/accounts/test/";
     private double threshold = -80;
 
@@ -80,14 +80,14 @@ public class PronunciationExercise extends Application implements PitchDetection
         Animation ani = new AnimatedGif("resources/animations/" + vowel + ".gif", 1000);
         ani.setCycleCount(1);
 
-        Button playBtn = new Button( "Play animation of " + vowel);
-        playBtn.setOnAction( e -> ani.play());
+        Button playBtn = new Button("Play animation of " + vowel);
+        playBtn.setOnAction(e -> ani.play());
 
         HBox playHBox = new HBox();
         playHBox.setAlignment(Pos.CENTER);
         playHBox.getChildren().add(playBtn);
 
-        animationVBox.getChildren().addAll( ani.getView(), playHBox);
+        animationVBox.getChildren().addAll(ani.getView(), playHBox);
         grid.add(animationVBox, 0, 2);
 
         //grid.add(formantInfo, 0, 2);
@@ -108,9 +108,9 @@ public class PronunciationExercise extends Application implements PitchDetection
         listenButton.setOnAction(e -> {
             recordButton.setDisable(true);
             listenButton.setDisable(true);
-            String bip = "resources/sample_sounds/" + word + ".wav";
-            Media hit = new Media(new File(bip).toURI().toString());
-            MediaPlayer mediaPlayer = new MediaPlayer(hit);
+            String pronunciationFileLocation = "resources/sample_sounds/pronunciation/" + word + ".wav";
+            Media pronunciationFile = new Media(new File(pronunciationFileLocation).toURI().toString());
+            MediaPlayer mediaPlayer = new MediaPlayer(pronunciationFile);
             mediaPlayer.play();
 
             recordButton.setDisable(false);
@@ -207,7 +207,7 @@ public class PronunciationExercise extends Application implements PitchDetection
                             System.out.println(formantUtils.isWithinStandardDeviation(vowel,
                                     currentAccount.getGender(), formantResults[0], formantResults[1]));
                             //AudioWaveformCreator audioWaveformCreator = new AudioWaveformCreator(new File(recordingPath), waveFormPath);
-                           // boolean isWaveFormCreated = audioWaveformCreator.createWaveImage();
+                            // boolean isWaveFormCreated = audioWaveformCreator.createWaveImage();
                             //System.out.println(isWaveFormCreated);
                             // TODO: don't save this result but things here should be logged
                             //accountUtils.saveResult(currentAccount.getUserName(), vowel, false, formantResults);
@@ -219,7 +219,7 @@ public class PronunciationExercise extends Application implements PitchDetection
                     e1.printStackTrace();
                 }
                 //userResults.getData().clear();
-                userResults.getData().add(new XYChart.Data(1711,586,20));
+                userResults.getData().add(new XYChart.Data(1711, 586, 20));
                 //formantChart.getData().add(userResults);
             } else {
                 IsRecording.set(false);
@@ -281,7 +281,7 @@ public class PronunciationExercise extends Application implements PitchDetection
         formantChart.getData().add(nativeResults);
 
         userResults.setName("Your pronunciation of /" + vowel + "/");
-        userResults.getData().add(new XYChart.Data(2000,500, 10));
+        userResults.getData().add(new XYChart.Data(2000, 500, 10));
         formantChart.getData().add(userResults);
         grid.add(formantChart, 1, 0, 1, 3);
 
@@ -334,16 +334,15 @@ public class PronunciationExercise extends Application implements PitchDetection
         XYChart.Series series = new XYChart.Series();
         series.setName("Native pronunciation of /" + vowel + "/");
 
-        series.getData().add(new XYChart.Data(1111,586,80));
-        series.getData().add(new XYChart.Data(25,40,5));
-        series.getData().add(new XYChart.Data(40,50,9));
-        series.getData().add(new XYChart.Data(55,60,7));
-        series.getData().add(new XYChart.Data(70,70,9));
-        series.getData().add(new XYChart.Data(85,80,6));
+        series.getData().add(new XYChart.Data(1111, 586, 80));
+        series.getData().add(new XYChart.Data(25, 40, 5));
+        series.getData().add(new XYChart.Data(40, 50, 9));
+        series.getData().add(new XYChart.Data(55, 60, 7));
+        series.getData().add(new XYChart.Data(70, 70, 9));
+        series.getData().add(new XYChart.Data(85, 80, 6));
 
         return series;
     }
-
 
 
     public void initializeAndStart(Stage primaryStage, Account account, String word, char vowel) {

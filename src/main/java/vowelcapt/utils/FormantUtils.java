@@ -89,8 +89,8 @@ public class FormantUtils {
                 secondFormantValues.add(buf[1]);
             }
 
-            double firstFormantAverage = calculateAverageFormantValue(userGender,1, firstFormantValues, vowel);
-            double secondFormantAverage = calculateAverageFormantValue(userGender,2, secondFormantValues, vowel);
+            double firstFormantAverage = calculateAverageFormantValue(userGender, 1, firstFormantValues, vowel);
+            double secondFormantAverage = calculateAverageFormantValue(userGender, 2, secondFormantValues, vowel);
             System.out.println(firstFormantAverage);
             System.out.println(secondFormantAverage);
             return new double[]{firstFormantAverage, secondFormantAverage};
@@ -145,19 +145,19 @@ public class FormantUtils {
             vowelInfo = vowelInfoOptional.get();
             boolean isFirstFormantWithinStandardDeviation =
                     firstFormantAverageValue >= vowelInfo.getFirstFormantMean() - vowelInfo.getFirstFormantSd()
-                    && firstFormantAverageValue <= vowelInfo.getFirstFormantMean() + vowelInfo.getFirstFormantSd();
+                            && firstFormantAverageValue <= vowelInfo.getFirstFormantMean() + vowelInfo.getFirstFormantSd();
 
             boolean isSecondFormantWithinStandardDeviation =
                     secondFormantAverageValue >= vowelInfo.getSecondFormantMean() - vowelInfo.getSecondFormantSd()
-                    && secondFormantAverageValue <= vowelInfo.getSecondFormantMean() + vowelInfo.getSecondFormantSd();
+                            && secondFormantAverageValue <= vowelInfo.getSecondFormantMean() + vowelInfo.getSecondFormantSd();
 
             System.out.println("F1 value: " + firstFormantAverageValue + " is within "
-                    + vowelInfo.getFirstFormantMean() + " +- " + vowelInfo.getFirstFormantSd() +  " : "
+                    + vowelInfo.getFirstFormantMean() + " +- " + vowelInfo.getFirstFormantSd() + " : "
                     + isFirstFormantWithinStandardDeviation);
 
             System.out.println("F2 value: " + secondFormantAverageValue + " is within "
-                    + vowelInfo.getSecondFormantMean() + " +- " + vowelInfo.getSecondFormantSd() +  " : "
-                    + isFirstFormantWithinStandardDeviation);
+                    + vowelInfo.getSecondFormantMean() + " +- " + vowelInfo.getSecondFormantSd() + " : "
+                    + isSecondFormantWithinStandardDeviation);
 
             return isFirstFormantWithinStandardDeviation && isSecondFormantWithinStandardDeviation;
         }
