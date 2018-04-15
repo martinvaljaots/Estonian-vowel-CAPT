@@ -5,6 +5,7 @@ import de.fau.cs.jstk.framed.*;
 import de.fau.cs.jstk.sampled.AudioFileReader;
 import de.fau.cs.jstk.sampled.AudioSource;
 import de.fau.cs.jstk.sampled.RawAudioFormat;
+import vowelcapt.utils.helpers.FormantResults;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
@@ -21,6 +22,8 @@ public class FormantUtils {
 
     private List<VowelInfo> maleVowels = new ArrayList<>();
     private List<VowelInfo> femaleVowels = new ArrayList<>();
+    private static List<FormantResults> formantResultsStorage = new ArrayList<>();
+    private Object lock = new Object();
 
     public FormantUtils() {
         initializeVowelInfo();
@@ -163,5 +166,32 @@ public class FormantUtils {
         }
 
         return false;
+    }
+
+    public List<VowelInfo> getVowels(String gender) {
+        if (gender.equals("male")) {
+            return maleVowels;
+        }
+        return femaleVowels;
+    }
+
+    public synchronized Optional<FormantResults> getLastResults() {
+        synchronized (lock) {
+            while (formantResultsStorage.isEmpty()) {
+                try {
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            return Optional.of(formantResultsStorage.remove(0));
+        }
+    }
+
+    public void addLastResults(FormantResults formantResults) {
+        synchronized (lock) {
+            formantResultsStorage.add(formantResults);
+            lock.notifyAll();
+        }
     }
 }

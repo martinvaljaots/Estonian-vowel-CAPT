@@ -6,7 +6,6 @@ import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.SilenceDetector;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -27,16 +26,14 @@ import javax.sound.sampled.*;
 import java.io.File;
 import java.util.Optional;
 
-/**
- * Based on a SoundDetector example in TarsosDSP.
- * https://github.com/JorenSix/TarsosDSP
- */
+// Based on a SoundDetector example in TarsosDSP. https://github.com/JorenSix/TarsosDSP
 
 public class ThresholdSetter extends Application implements AudioProcessor {
 
     private GraphPanel graphPanel = new GraphPanel(-80);
     private SilenceDetector silenceDetector = new SilenceDetector();
     private double threshold = -80;
+    private MediaPlayer mediaPlayer;
     private AccountUtils accountUtils = new AccountUtils();
     //TODO: remove this test account before user testing
     private Account currentAccount = new Account("test", "test", "male");
@@ -57,11 +54,11 @@ public class ThresholdSetter extends Application implements AudioProcessor {
 
         grid.add(instructionLabel, 0, 0);
 
-        Button listenButton = new Button("Listen to \"maam\"");
+        Button listenButton = new Button("Listen to \"tüüp\"");
         listenButton.setOnAction(e -> {
-            String bip = "resources/sample_sounds/maam.wav";
+            String bip = "resources/sample_sounds/pronunciation/tüüp.wav";
             Media hit = new Media(new File(bip).toURI().toString());
-            MediaPlayer mediaPlayer = new MediaPlayer(hit);
+            mediaPlayer = new MediaPlayer(hit);
             mediaPlayer.play();
         });
 
@@ -143,8 +140,6 @@ public class ThresholdSetter extends Application implements AudioProcessor {
             cancelButton.setOnAction(e -> {
                 line.stop();
                 line.close();
-                primaryStage.setWidth(300);
-                primaryStage.setHeight(300);
                 new ExerciseSelection().initializeAndStart(primaryStage, currentAccount);
             });
 
@@ -164,13 +159,10 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         primaryStage.setScene(scene);
         primaryStage.setWidth(500);
         primaryStage.setHeight(625);
-        primaryStage.setOnCloseRequest(t -> {
-            Platform.exit();
-            System.exit(0);
-        });
         primaryStage.show();
     }
 
+    //TODO: remove this main method
     public static void main(String[] args) {
         launch(args);
     }

@@ -1,10 +1,12 @@
-package vowelcapt.views;
+package vowelcapt.experimental;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
-import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.SilenceDetector;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
+import be.tarsos.dsp.pitch.PitchDetectionHandler;
+import be.tarsos.dsp.pitch.PitchDetectionResult;
+import be.tarsos.dsp.pitch.PitchProcessor;
 import com.sun.javafx.charts.Legend;
 import javafx.application.Application;
 import javafx.embed.swing.SwingNode;
@@ -27,6 +29,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import vowelcapt.utils.*;
 import vowelcapt.utils.helpers.*;
+import vowelcapt.views.ExerciseSelection;
 
 import javax.sound.sampled.*;
 import java.io.*;
@@ -42,14 +45,14 @@ import java.util.Set;
 // TODO: make the layout pretty
 
 // Audio processing in this class is partly based on examples from TarsosDSP https://github.com/JorenSix/TarsosDSP
-public class PronunciationExercise extends Application implements AudioProcessor {
+public class PronunciationExerciseWithPitchHandling extends Application implements PitchDetectionHandler {
 
     private final Button recordButton = new Button("Record");
     private final Button playBackButton = new Button("Play back");
     private final Button listenButton = new Button("Listen");
     private final Button quitButton = new Button("Back to exercise selection");
     private final GraphPanel graphPanel = new GraphPanel(-80);
-    private BubbleChart<Number, Number> formantChart;
+    private final BubbleChart<Number, Number> formantChart = setUpFormantChart();
     private XYChart.Series<Number, Number> userResults = new XYChart.Series<>();
     private FormantUtils formantUtils = new FormantUtils();
     private ByteArrayOutputStream out;
@@ -68,10 +71,10 @@ public class PronunciationExercise extends Application implements AudioProcessor
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setX(100);
+        primaryStage.setX(200);
         primaryStage.setY(50);
         GridPane grid = new GridPane();
-        grid.setAlignment(Pos.TOP_CENTER);
+        grid.setAlignment(Pos.CENTER);
         grid.setHgap(15);
         grid.setVgap(15);
         grid.setPadding(new Insets(25, 25, 25, 25));
@@ -131,7 +134,6 @@ public class PronunciationExercise extends Application implements AudioProcessor
         listenButton.setOnAction(e -> {
             recordButton.setDisable(true);
             listenButton.setDisable(true);
-            recordingInfo.setText("");
             String pronunciationFileLocation = "resources/sample_sounds/pronunciation/" + word + ".wav";
             Media pronunciationFile = new Media(new File(pronunciationFileLocation).toURI().toString());
             MediaPlayer mediaPlayer = new MediaPlayer(pronunciationFile);
@@ -170,7 +172,8 @@ public class PronunciationExercise extends Application implements AudioProcessor
                     AudioDispatcher dispatcher = new AudioDispatcher(audioStream, 1024,
                             0);
 
-                    dispatcher.addAudioProcessor(this);
+                    dispatcher.addAudioProcessor(new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.YIN,
+                            44100, 1024, this));
                     dispatcher.addAudioProcessor(silenceDetector);
                     new Thread(dispatcher, "Audio dispatching").start();
 
@@ -188,7 +191,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
                                 if (count > 0) {
                                     byte secondBuffer[] = buffer;
                                     out.write(buffer, 0, count);
-                                    if (SilenceDetectorCurrentSPL.get() > threshold) {
+                                    if (SilenceDetectorCurrentSPL.get() > threshold && HasPitchBeenDetected.get()) {
                                         WasSoundIntensityAboveThreshold.set(true);
                                         vowelOut.write(secondBuffer, 0, count);
                                     }
@@ -303,15 +306,12 @@ public class PronunciationExercise extends Application implements AudioProcessor
         });
 
         userResults.setName("Your pronunciation of /" + vowel + "/");
-        formantChart = setUpFormantChart();
         formantChart.getData().add(userResults);
         setUpNativePronunciationRangesOnChart();
         formantChart.setPrefWidth(800);
         Tooltip chartToolTip = new Tooltip("This graph represents your pronunciation.\n" +
-                "F1 represents your tongue position high to low\n" +
-                "( lower value - tongue higher, higher value - tongue lower ),\n" +
-                "F2 represents your tongue position back to front\n" +
-                "( lower value - tongue further back, higher value - tongue further front ).\n" +
+                "F1 represents your tongue position high to low,\n" +
+                "F2 represents your tongue position back to front.\n" +
                 "The green bubble represents the target area for your pronunciation.\n" +
                 "Try different mouth positions as you pronounce the vowel.");
         chartToolTip.setFont(Font.font(14));
@@ -319,14 +319,14 @@ public class PronunciationExercise extends Application implements AudioProcessor
         //https://coderanch.com/t/622070/java/control-Tooltip-visible-time-duration
         formantChart.setOnMouseEntered(event -> {
             Point2D p = formantChart.localToScreen(formantChart.getLayoutBounds().getMaxX() - 200,
-                    formantChart.getLayoutBounds().getMinY() - 150);
+                    formantChart.getLayoutBounds().getMinY() - 125);
             chartToolTip.show(formantChart, p.getX(), p.getY());
         });
         formantChart.setOnMouseExited(event -> chartToolTip.hide());
 
         quitButton.setOnAction(e -> new ExerciseSelection().initializeAndStart(primaryStage, currentAccount));
         HBox quitButtonHbox = new HBox();
-        quitButtonHbox.setAlignment(Pos.CENTER_RIGHT);
+        quitButtonHbox.setAlignment(Pos.BOTTOM_RIGHT);
         quitButtonHbox.getChildren().add(quitButton);
 
         HBox resultsInfoHbox = new HBox();
@@ -338,7 +338,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
         resultsAndQuitHbox.setAlignment(Pos.CENTER_RIGHT);
         resultsAndQuitHbox.getChildren().addAll(resultsInfoHbox, quitButtonHbox);
 
-        VBox chartAndQuitBtnVbox = new VBox();
+        VBox chartAndQuitBtnVbox = new VBox(5);
         chartAndQuitBtnVbox.getChildren().addAll(formantChart, resultsAndQuitHbox);
         grid.add(chartAndQuitBtnVbox, 1, 3, 2, 4);
 
@@ -347,12 +347,11 @@ public class PronunciationExercise extends Application implements AudioProcessor
         primaryStage.setTitle("EstonianVowelCAPT - Pronunciation: " + vowel);
         primaryStage.setScene(scene);
         primaryStage.setWidth(1200);
-        primaryStage.setHeight(700);
+        primaryStage.setHeight(750);
         primaryStage.show();
     }
 
     private void updateChart(FormantResults results) {
-        // TODO: add logging here, definitely
         System.out.println(results);
         double firstFormant = results.getFirstFormantAverage();
         double secondFormant = results.getSecondFormantAverage();
@@ -394,21 +393,27 @@ public class PronunciationExercise extends Application implements AudioProcessor
         launch(args);
     }
 
-    private BubbleChart<Number, Number> setUpFormantChart() {
-        int xAxisLowerBound = 500;
-        int xAxisUpperBound = 3000;
-        int yAxisLowerBound = 200;
-        int yAxisUpperBound = 900;
-
-        if (currentAccount.getGender().equals("male")) {
-            xAxisUpperBound = 2500;
-            yAxisUpperBound = 800;
+    @Override
+    public void handlePitch(PitchDetectionResult pitchDetectionResult, AudioEvent audioEvent) {
+        //graphPanel.addDataPoint(silenceDetector.currentSPL(), System.currentTimeMillis());
+        SilenceDetectorCurrentSPL.set(silenceDetector.currentSPL());
+        if (pitchDetectionResult.getPitch() != -1) {
+            HasPitchBeenDetected.set(true);
+            double timeStamp = audioEvent.getTimeStamp();
+            float pitch = pitchDetectionResult.getPitch();
+            float probability = pitchDetectionResult.getProbability();
+            double rms = audioEvent.getRMS() * 100;
+            String message = String.format("Pitch detected at %.2fs: %.2fHz ( %.2f probability, RMS: %.5f )\n", timeStamp, pitch, probability, rms);
+            System.out.println(message);
         }
+    }
 
-        NumberAxis xAxis = new NumberAxis(xAxisLowerBound, xAxisUpperBound, 500);
+    private BubbleChart<Number, Number> setUpFormantChart() {
+
+        NumberAxis xAxis = new NumberAxis(500, 3000, 500);
         xAxis.setLabel("F2");
 
-        NumberAxis yAxis = new NumberAxis(yAxisLowerBound, yAxisUpperBound, 100);
+        NumberAxis yAxis = new NumberAxis(200, 900, 100);
         yAxis.setLabel("F1");
 
         return new BubbleChart<>(xAxis, yAxis);
@@ -453,6 +458,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
                 final Legend existingLegend = (Legend) legendParent;
 
                 existingLegend.getItems().removeIf(item -> item.getText().equals(""));
+                System.out.println(existingLegend.getItems());
             } catch (ClassCastException ex) {
                 ex.printStackTrace();
             }
@@ -473,7 +479,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
 
                     //TODO: maybe a better color
                 } else {
-                    n.setStyle("-fx-bubble-fill:  #ffff00aa; "
+                    n.setStyle("-fx-bubble-fill:  #FFFB00aa; "
                             + "-fx-background-color: radial-gradient(center 50% 50%, radius 80%, "
                             + "derive(-fx-bubble-fill,20%), derive(-fx-bubble-fill,-30%));");
                 }
@@ -503,16 +509,5 @@ public class PronunciationExercise extends Application implements AudioProcessor
         this.vowel = vowel;
         userPath = "resources/accounts/" + account.getUserName() + "/";
         start(primaryStage);
-    }
-
-    @Override
-    public boolean process(AudioEvent audioEvent) {
-        SilenceDetectorCurrentSPL.set(silenceDetector.currentSPL());
-        return false;
-    }
-
-    @Override
-    public void processingFinished() {
-
     }
 }

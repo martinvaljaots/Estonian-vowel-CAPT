@@ -1,6 +1,7 @@
 package vowelcapt.views;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -34,7 +35,7 @@ public class Login extends Application {
         grid.setPadding(new Insets(25, 25, 25, 25));
 
         Text sceneTitle = new Text("Welcome");
-        sceneTitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
+        sceneTitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 24));
         grid.add(sceneTitle, 0, 0, 2, 1);
 
         Label userName = new Label("Username:");
@@ -99,6 +100,10 @@ public class Login extends Application {
         Scene scene = new Scene(grid, 400, 300);
         primaryStage.setTitle("EstonianVowelCAPT - Login");
         primaryStage.setScene(scene);
+        primaryStage.setOnCloseRequest(t -> {
+            Platform.exit();
+            System.exit(0);
+        });
         primaryStage.show();
     }
 

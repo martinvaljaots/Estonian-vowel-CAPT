@@ -40,7 +40,7 @@ public class Register extends Application {
         grid.setPadding(new Insets(25, 25, 25, 25));
 
         Text sceneTitle = new Text("Register user");
-        sceneTitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
+        sceneTitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 24));
         grid.add(sceneTitle, 0, 0, 2, 1);
 
         Label userName = new Label("Enter username:");

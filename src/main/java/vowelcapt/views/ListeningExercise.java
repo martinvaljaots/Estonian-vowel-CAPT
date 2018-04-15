@@ -147,8 +147,6 @@ public class ListeningExercise extends Application {
             finishedAlert.showAndWait();
             new ExerciseSelection().initializeAndStart(stage, currentAccount);
         }
-
-
     }
 
     private void playSoundFile(String soundFilePath) {
