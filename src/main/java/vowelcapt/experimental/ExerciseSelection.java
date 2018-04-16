@@ -1,4 +1,4 @@
-package vowelcapt.views;
+package vowelcapt.experimental;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -13,6 +13,8 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import vowelcapt.utils.account.Account;
 import vowelcapt.utils.account.AccountUtils;
+import vowelcapt.views.PronunciationExercise;
+import vowelcapt.views.ThresholdSetter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,18 +97,44 @@ public class ExerciseSelection extends Application {
         listeningExercisesLabel.setFont(Font.font("Tahoma", FontWeight.NORMAL, 16));
         grid.add(listeningExercisesLabel, 1, 3, 2, 1);
 
-        Button listeningExerciseButton1 = new Button("Quantity degrees: short, long, overlong");
+        Button listeningExerciseButton1 = new Button("Quantity degrees: short vs. long");
         listeningExerciseButton1.setOnAction(e -> {
             List<String> filenames = new ArrayList<>();
-            filenames.add("1_1-2-3");
-            filenames.add("2_2-3-1");
-            filenames.add("3_3-2-1");
-            filenames.add("4_1-2-3");
-            filenames.add("5_1-3-2");
+            filenames.add("1_2");
+            filenames.add("2_1");
+            filenames.add("3_2");
+            filenames.add("4_2");
+            filenames.add("5_2");
             new ListeningExercise().initializeAndStart(primaryStage, "short_long_overlong", filenames,
-                    currentAccount);
+                    "long", currentAccount);
         });
         grid.add(listeningExerciseButton1, 1, 4, 2, 1);
+
+        Button listeningExerciseButton2 = new Button("Quantity degrees: short vs. overlong");
+        listeningExerciseButton2.setOnAction(e -> {
+            List<String> filenames = new ArrayList<>();
+            filenames.add("1_2");
+            filenames.add("2_2");
+            filenames.add("3_1");
+            filenames.add("4_2");
+            filenames.add("5_2");
+            new ListeningExercise().initializeAndStart(primaryStage, "short_overlong", filenames,
+                    "short", currentAccount);
+        });
+        grid.add(listeningExerciseButton2, 1, 5, 2, 1);
+
+        Button listeningExerciseButton3 = new Button("Quantity degrees: long vs. overlong");
+        listeningExerciseButton3.setOnAction(e -> {
+            List<String> filenames = new ArrayList<>();
+            filenames.add("1_2");
+            filenames.add("2_2");
+            filenames.add("3_1");
+            filenames.add("4_2");
+            filenames.add("5_1");
+            new ListeningExercise().initializeAndStart(primaryStage, "long_overlong", filenames,
+                    "overlong", currentAccount);
+        });
+        grid.add(listeningExerciseButton3, 1, 6, 2, 1);
 
         Label settingsLabel = new Label("Settings:");
         settingsLabel.setFont(Font.font("Tahoma", FontWeight.NORMAL, 16));
@@ -121,7 +149,7 @@ public class ExerciseSelection extends Application {
         primaryStage.setTitle("EstonianVowelCAPT - Exercise selection");
         primaryStage.setScene(scene);
         primaryStage.setHeight(600);
-        primaryStage.setWidth(700);
+        primaryStage.setWidth(650);
         primaryStage.show();
     }
 

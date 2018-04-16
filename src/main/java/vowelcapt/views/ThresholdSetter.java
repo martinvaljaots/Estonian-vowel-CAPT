@@ -47,16 +47,16 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         grid.setVgap(15);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        Label instructionLabel = new Label("Listen to the pronunciation of \"maam\" and try to replicate it.\n" +
-                "Move the slider to change your microphone volume so that only \nthe vowel part \"aa\" lights up as green.\n" +
+        Label instructionLabel = new Label("Listen to the pronunciation of \"kook\" and try to replicate it.\n" +
+                "Move the slider to change your microphone volume so that only \nthe vowel part \"oo\" lights up as green.\n" +
                 "This is necessary for accurately measuring your pronunciations.\n" +
                 "The red bar shows the current highest recorded volume.");
 
         grid.add(instructionLabel, 0, 0);
 
-        Button listenButton = new Button("Listen to \"tüüp\"");
+        Button listenButton = new Button("Listen to \"kook\"");
         listenButton.setOnAction(e -> {
-            String bip = "resources/sample_sounds/pronunciation/tüüp.wav";
+            String bip = "resources/sample_sounds/pronunciation/kook.wav";
             Media hit = new Media(new File(bip).toURI().toString());
             mediaPlayer = new MediaPlayer(hit);
             mediaPlayer.play();

@@ -305,6 +305,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
         Tooltip chartToolTip = new Tooltip("This graph represents your pronunciation.\n" +
                 "The axes describe your tongue position for your pronunciation result.\n" +
                 "The green bubble represents the target area for your pronunciation.\n" +
+                "Native pronunciations are in a smaller area than the green bubble.\n" +
                 "The animation is a guide for how your mouth and tongue should be positioned.\n" +
                 "Try different positions as you pronounce the vowel.");
         chartToolTip.setFont(Font.font(14));
@@ -366,7 +367,8 @@ public class PronunciationExercise extends Application implements AudioProcessor
                             "\nPlease try again and consider adjusting your microphone volume.";
                 }
             } else {
-                resultsInfoMessage = "Your last pronunciation was outside the range of a native speaker. Keep trying.\n ";
+                resultsInfoMessage = "Your last pronunciation was outside the range of a native speaker. Keep trying.\n " +
+                        "Position your tongue so that it's closer to the target bubble on the low-high, front-back dimensions.";
             }
         }
         resultsInfo.setText(resultsInfoMessage);
@@ -392,12 +394,11 @@ public class PronunciationExercise extends Application implements AudioProcessor
     private BubbleChart<Number, Number> setUpFormantChart() {
         int xAxisLowerBound = 500;
         int xAxisUpperBound = 3000;
-        int yAxisLowerBound = 200;
+        int yAxisLowerBound = 100;
         int yAxisUpperBound = 900;
 
         if (currentAccount.getGender().equals("male")) {
             xAxisUpperBound = 2500;
-            yAxisUpperBound = 800;
         }
 
         NumberAxis xAxis = new NumberAxis(xAxisUpperBound, xAxisLowerBound, 500);
@@ -429,10 +430,15 @@ public class PronunciationExercise extends Application implements AudioProcessor
                 series.setName("");
             }
 
+            double extraValue = (vowel.getFirstFormantSd() + vowel.getSecondFormantSd()) / 2;
+            extraValue += extraValue / 5;
+
+            System.out.println(vowel.getSecondFormantMean() + " " + vowel.getFirstFormantMean() + " " + extraValue);
+
             series.getData().add(new XYChart.Data<>(
                     vowel.getSecondFormantMean(),
                     vowel.getFirstFormantMean(),
-                    (vowel.getFirstFormantSd() + vowel.getSecondFormantSd()) / 2));
+                    extraValue));
 
             formantChart.getData().add(series);
             for (XYChart.Data<Number, Number> data : series.getData()) {

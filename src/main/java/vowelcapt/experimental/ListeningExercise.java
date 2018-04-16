@@ -1,4 +1,4 @@
-package vowelcapt.views;
+package vowelcapt.experimental;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -13,9 +13,9 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import vowelcapt.utils.account.Account;
 import vowelcapt.utils.account.AccountUtils;
+import vowelcapt.views.ExerciseSelection;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -28,12 +28,12 @@ public class ListeningExercise extends Application {
     private int scoreCounter = 0;
     private MediaPlayer mediaPlayer;
     private final Label questionLabel = new Label();
-    private final CheckBox firstAnswerButton = new CheckBox();
-    private final CheckBox secondAnswerButton = new CheckBox();
-    private final CheckBox thirdAnswerButton = new CheckBox();
+    private final Button firstAnswerButton = new Button("A");
+    private final Button secondAnswerButton = new Button("B");
     private final Button questionListenButton = new Button();
-    private List<Integer> answerSequence = new ArrayList<>();
+    private String mainQuantityDegree;
     private String currentQuestionFileName;
+    private String article = "a";
     private Account currentAccount;
     private Stage stage;
     private AccountUtils accountUtils = new AccountUtils();
@@ -56,11 +56,14 @@ public class ListeningExercise extends Application {
         exampleListeningButton.setOnAction(e -> playSoundFile("short_long_overlong"));
         grid.add(exampleListeningButton, 0, 1);
 
-        Label exerciseLabel = new Label("Listening:\nshort, long, overlong");
+        Label exerciseLabel = new Label("Listening: " + quantityDegrees[0] + " vs. " + quantityDegrees[1]);
         exerciseLabel.setFont(Font.font("Arial", 30));
         grid.add(exerciseLabel, 0, 3);
 
-        questionLabel.setText("Order the words in increasing degree of quantity.\n" +
+        if (mainQuantityDegree.equals("overlong")) {
+            article = "an";
+        }
+        questionLabel.setText("Which of the two words has " + article + " " + mainQuantityDegree + " vowel?\n" +
                 "Question " + questionCounter + "/5:");
         grid.add(questionLabel, 0, 4);
 
@@ -68,66 +71,18 @@ public class ListeningExercise extends Application {
         questionListenButton.setOnAction(e -> playSoundFile(audioFilesFolder + "/" + currentQuestionFileName));
         grid.add(questionListenButton, 0, 5);
 
-        Label answerLabel = new Label("Your answer - click the boxes in order of increasing quantity degree:");
+        Label answerLabel = new Label("Your answer:");
         grid.add(answerLabel, 0, 6);
 
         firstAnswerButton.setFont(Font.font(20));
-        firstAnswerButton.setOnAction(e -> {
-            if (firstAnswerButton.isSelected()) {
-                answerSequence.add(1);
-                firstAnswerButton.setText(String.valueOf(answerSequence.size()));
-                if (answerSequence.size() == 3) {
-                    checkAnswer(currentQuestionFileName, answerSequence);
-                }
-            } else {
-                answerSequence.remove((Integer) 1);
-                firstAnswerButton.setText("");
-                secondAnswerButton.setText(answerSequence.indexOf(2) != -1 ?
-                        String.valueOf(answerSequence.indexOf(2) + 1) : "");
-                thirdAnswerButton.setText(answerSequence.indexOf(3) != -1 ?
-                        String.valueOf(answerSequence.indexOf(3) + 1) : "");
-            }
-        });
+        firstAnswerButton.setOnAction(e -> checkAnswer(currentQuestionFileName, 1));
 
         secondAnswerButton.setFont(Font.font(20));
-        secondAnswerButton.setOnAction(e -> {
-            if (secondAnswerButton.isSelected()) {
-                answerSequence.add(2);
-                secondAnswerButton.setText(String.valueOf(answerSequence.size()));
-                if (answerSequence.size() == 3) {
-                    checkAnswer(currentQuestionFileName, answerSequence);
-                }
-            } else {
-                answerSequence.remove((Integer) 2);
-                secondAnswerButton.setText("");
-                firstAnswerButton.setText(answerSequence.indexOf(1) != -1 ?
-                        String.valueOf(answerSequence.indexOf(1) + 1) : "");
-                thirdAnswerButton.setText(answerSequence.indexOf(3) != -1 ?
-                        String.valueOf(answerSequence.indexOf(3) + 1) : "");
-            }
-        });
-
-        thirdAnswerButton.setFont(Font.font(20));
-        thirdAnswerButton.setOnAction(e -> {
-            if (thirdAnswerButton.isSelected()) {
-                answerSequence.add(3);
-                thirdAnswerButton.setText(String.valueOf(answerSequence.size()));
-                if (answerSequence.size() == 3) {
-                    checkAnswer(currentQuestionFileName, answerSequence);
-                }
-            } else {
-                answerSequence.remove((Integer) 3);
-                thirdAnswerButton.setText("");
-                firstAnswerButton.setText(answerSequence.indexOf(1) != -1 ?
-                        String.valueOf(answerSequence.indexOf(1) + 1) : "");
-                secondAnswerButton.setText(answerSequence.indexOf(2) != -1 ?
-                        String.valueOf(answerSequence.indexOf(2) + 1) : "");
-            }
-        });
+        secondAnswerButton.setOnAction(e -> checkAnswer(currentQuestionFileName, 2));
 
         HBox answerHbox = new HBox(20);
         answerHbox.setAlignment(Pos.BOTTOM_LEFT);
-        answerHbox.getChildren().addAll(firstAnswerButton, secondAnswerButton, thirdAnswerButton);
+        answerHbox.getChildren().addAll(firstAnswerButton, secondAnswerButton);
         grid.add(answerHbox, 0, 7);
 
         Button quitButton = new Button("Quit");
@@ -161,18 +116,13 @@ public class ListeningExercise extends Application {
         primaryStage.show();
     }
 
-    private void checkAnswer(String questionFileName, List<Integer> answer) {
+    private void checkAnswer(String questionFileName, int answer) {
         String[] questionFileNameSplit = questionFileName.split("_");
+        int correctAnswer = Integer.parseInt(questionFileNameSplit[1]);
 
-        String[] correctAnswerSequence = questionFileNameSplit[1].split("-");
-        int[] correctAnswerArray = {Integer.parseInt(correctAnswerSequence[0]),
-                Integer.parseInt(correctAnswerSequence[1]), Integer.parseInt(correctAnswerSequence[2])};
+        boolean answerCorrectness = (answer == correctAnswer);
 
-        boolean answerCorrectness = (answer.get(0) == correctAnswerArray[0]) && (answer.get(1) == correctAnswerArray[1])
-                && (answer.get(2) == correctAnswerArray[2]);
-
-        String message = "Incorrect!\nCorrect order: " + correctAnswerArray[0] + " "
-                + correctAnswerArray[1] + " " + correctAnswerArray[2];
+        String message = "Incorrect!";
         if (answerCorrectness) {
             message = "Correct!";
             scoreCounter++;
@@ -191,15 +141,8 @@ public class ListeningExercise extends Application {
             currentQuestionFileName = audioFileNames.get(0);
             audioFileNames.remove(0);
             questionCounter++;
-            firstAnswerButton.setText("");
-            firstAnswerButton.setSelected(false);
-            secondAnswerButton.setText("");
-            secondAnswerButton.setSelected(false);
-            thirdAnswerButton.setText("");
-            thirdAnswerButton.setSelected(false);
-            answerSequence = new ArrayList<>();
             questionListenButton.setText("Listen to question " + questionCounter + "/5");
-            questionLabel.setText("Order the words in increasing degree of quantity.\n" +
+            questionLabel.setText("Which of the two words has " + article + " " + mainQuantityDegree + " vowel?\n" +
                     "Question " + questionCounter + "/5:");
             playSoundFile(audioFilesFolder + "/" + currentQuestionFileName);
         } else {
@@ -223,12 +166,13 @@ public class ListeningExercise extends Application {
     }
 
     public void initializeAndStart(Stage primaryStage, String audioFilesFolder,
-                                   List<String> audioFileNames, Account account) {
+                                   List<String> audioFileNames, String mainQuantityDegree, Account account) {
         accountUtils.saveToLog(account.getUserName(), Collections.singletonList("Moved to " + audioFilesFolder
                 + " listening exercise."));
         this.stage = primaryStage;
         this.audioFilesFolder = audioFilesFolder;
         this.audioFileNames = audioFileNames;
+        this.mainQuantityDegree = mainQuantityDegree;
         currentAccount = account;
         currentQuestionFileName = audioFileNames.get(0);
         audioFileNames.remove(0);
