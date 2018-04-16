@@ -27,8 +27,14 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import vowelcapt.utils.*;
-import vowelcapt.utils.helpers.*;
+import vowelcapt.utils.account.Account;
+import vowelcapt.utils.account.AccountUtils;
+import vowelcapt.utils.animation.AnimatedGif;
+import vowelcapt.utils.animation.Animation;
+import vowelcapt.utils.audio.*;
+import vowelcapt.utils.formants.FormantResults;
+import vowelcapt.utils.formants.FormantUtils;
+import vowelcapt.utils.formants.VowelInfo;
 import vowelcapt.views.ExerciseSelection;
 
 import javax.sound.sampled.*;

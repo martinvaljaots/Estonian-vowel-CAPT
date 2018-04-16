@@ -13,8 +13,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import vowelcapt.utils.Account;
-import vowelcapt.utils.AccountUtils;
+import vowelcapt.utils.account.Account;
+import vowelcapt.utils.account.AccountUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -94,8 +94,7 @@ public class Register extends Application {
             if (accountUtils.accountExists(userNameField.getText())) {
                 actiontarget.setFill(Color.FIREBRICK);
                 actiontarget.setText("Username already in use!");
-            }
-            else if (!passwordField.getText().equals(passwordAgainField.getText())) {
+            } else if (!passwordField.getText().equals(passwordAgainField.getText())) {
                 actiontarget.setFill(Color.FIREBRICK);
                 actiontarget.setText("Passwords don't match!");
             } else if (userNameField.getText().equals("")
@@ -125,8 +124,6 @@ public class Register extends Application {
         Path path = FileSystems.getDefault().getPath("resources/accounts/acc.csv");
 
         String newUserInfo = account.getUserName() + ";" + account.getPassword() + ";" + account.getGender();
-        System.out.println(newUserInfo);
-        System.out.println(path.toString());
 
         List<String> newUserInfoLines = Collections.singletonList(newUserInfo);
 

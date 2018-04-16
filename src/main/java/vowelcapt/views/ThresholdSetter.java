@@ -17,13 +17,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
-import vowelcapt.utils.Account;
-import vowelcapt.utils.AccountUtils;
-import vowelcapt.utils.AudioUtils;
-import vowelcapt.utils.GraphPanel;
+import vowelcapt.utils.account.Account;
+import vowelcapt.utils.account.AccountUtils;
+import vowelcapt.utils.audio.AudioUtils;
+import vowelcapt.utils.audio.GraphPanel;
 
 import javax.sound.sampled.*;
 import java.io.File;
+import java.util.Collections;
 import java.util.Optional;
 
 // Based on a SoundDetector example in TarsosDSP. https://github.com/JorenSix/TarsosDSP
@@ -35,9 +36,8 @@ public class ThresholdSetter extends Application implements AudioProcessor {
     private double threshold = -80;
     private MediaPlayer mediaPlayer;
     private AccountUtils accountUtils = new AccountUtils();
-    //TODO: remove this test account before user testing
-    private Account currentAccount = new Account("test", "test", "male");
-    private boolean isFirstRegistration = false;
+    private Account currentAccount;
+    private boolean isFirstRegistration;
 
     @Override
     public void start(Stage primaryStage) {
@@ -83,7 +83,6 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         thresholdSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
             graphPanel.setThresholdLevel(newValue.doubleValue());
             threshold = newValue.doubleValue();
-            System.out.println("Threshold set to: " + newValue.doubleValue());
         });
 
         grid.add(thresholdSlider, 0, 3);
@@ -97,7 +96,6 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         DataLine.Info info = new DataLine.Info(
                 TargetDataLine.class, format);
         try {
-
 
 
             line = (TargetDataLine)
@@ -125,7 +123,8 @@ public class ThresholdSetter extends Application implements AudioProcessor {
                 Optional<ButtonType> confirmationResult = confirmationAlert.showAndWait();
                 confirmationResult.ifPresent(a -> {
                     if (confirmationResult.get() == ButtonType.OK) {
-                        System.out.println("Saving threshold level: " + threshold);
+                        accountUtils.saveToLog(currentAccount.getUserName(),
+                                Collections.singletonList("Saving threshold level: " + threshold));
                         accountUtils.saveThreshold(currentAccount.getUserName(), threshold);
                         currentAccount.setThreshold(threshold);
                         line.stop();
@@ -162,11 +161,6 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         primaryStage.show();
     }
 
-    //TODO: remove this main method
-    public static void main(String[] args) {
-        launch(args);
-    }
-
     @Override
     public boolean process(AudioEvent audioEvent) {
         graphPanel.addDataPoint(silenceDetector.currentSPL(), System.currentTimeMillis());
@@ -181,6 +175,8 @@ public class ThresholdSetter extends Application implements AudioProcessor {
     public void initializeAndStart(Stage primaryStage, Account account, boolean isFirstRegistration) {
         currentAccount = account;
         this.isFirstRegistration = isFirstRegistration;
+        accountUtils.saveToLog(account.getUserName(), Collections.singletonList("Moved to threshold setting: "
+                + account.toString()));
         start(primaryStage);
     }
 }

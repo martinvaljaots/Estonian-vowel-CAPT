@@ -11,8 +11,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import vowelcapt.utils.Account;
-import vowelcapt.utils.AccountUtils;
+import vowelcapt.utils.account.Account;
+import vowelcapt.utils.account.AccountUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
