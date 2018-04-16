@@ -107,7 +107,7 @@ public class Login extends Application {
         primaryStage.show();
     }
 
-    public void initializeAndLaunch() {
-        launch();
+    public void initializeAndLaunch(String[] args) {
+        launch(args);
     }
 }
