@@ -228,7 +228,8 @@ public class PronunciationExercise extends Application implements AudioProcessor
                                     currentAccount.getGender(), vowel);
                             boolean isWithinStandardDeviation = formantUtils.isWithinStandardDeviation(vowel,
                                     currentAccount.getGender(), formantResults[0], formantResults[1]);
-                            System.out.println(isWithinStandardDeviation);
+                            // TODO: log this
+                            //System.out.println(isWithinStandardDeviation);
                             FormantResults results = new FormantResults(formantResults[0], formantResults[1], isWithinStandardDeviation);
                             formantUtils.addLastResults(results);
                             // TODO: don't save this result but things here should be logged
@@ -308,12 +309,10 @@ public class PronunciationExercise extends Application implements AudioProcessor
         setUpNativePronunciationRangesOnChart();
         formantChart.setPrefWidth(800);
         Tooltip chartToolTip = new Tooltip("This graph represents your pronunciation.\n" +
-                "F1 represents your tongue position high to low\n" +
-                "( lower value - tongue higher, higher value - tongue lower ),\n" +
-                "F2 represents your tongue position back to front\n" +
-                "( lower value - tongue further back, higher value - tongue further front ).\n" +
+                "The axes describe your tongue position for your pronunciation result.\n" +
                 "The green bubble represents the target area for your pronunciation.\n" +
-                "Try different mouth positions as you pronounce the vowel.");
+                "The animation is a guide for how your mouth and tongue should be positioned.\n" +
+                "Try different positions as you pronounce the vowel.");
         chartToolTip.setFont(Font.font(14));
 
         //https://coderanch.com/t/622070/java/control-Tooltip-visible-time-duration
@@ -381,17 +380,16 @@ public class PronunciationExercise extends Application implements AudioProcessor
                 firstFormant,
                 10));
 
+        setUserResultsColor();
+    }
+
+    private void setUserResultsColor() {
         Set<Node> nodes = formantChart.lookupAll(".series0");
         for (Node n : nodes) {
             n.setStyle("-fx-bubble-fill:  red; "
                     + "-fx-background-color: radial-gradient(center 50% 50%, radius 80%, "
                     + "derive(-fx-bubble-fill,20%), derive(-fx-bubble-fill,-30%));");
         }
-    }
-
-    //TODO: remove this main method
-    public static void main(String[] args) {
-        launch(args);
     }
 
     private BubbleChart<Number, Number> setUpFormantChart() {
@@ -405,17 +403,26 @@ public class PronunciationExercise extends Application implements AudioProcessor
             yAxisUpperBound = 800;
         }
 
-        NumberAxis xAxis = new NumberAxis(xAxisLowerBound, xAxisUpperBound, 500);
-        xAxis.setLabel("F2");
+        NumberAxis xAxis = new NumberAxis(xAxisUpperBound, xAxisLowerBound, 500);
+        xAxis.setLabel("Tongue front - back");
 
-        NumberAxis yAxis = new NumberAxis(yAxisLowerBound, yAxisUpperBound, 100);
-        yAxis.setLabel("F1");
+        NumberAxis yAxis = new NumberAxis(yAxisUpperBound, yAxisLowerBound, 100);
+        yAxis.setLabel("Tongue low - high");
 
         return new BubbleChart<>(xAxis, yAxis);
     }
 
     private void setUpNativePronunciationRangesOnChart() {
         List<VowelInfo> vowels = formantUtils.getVowels(currentAccount.getGender());
+
+        //For removing axis values from chart
+        formantChart.getXAxis().setTickLabelsVisible(false);
+        formantChart.getXAxis().setTickMarkVisible(false);
+        formantChart.getXAxis().lookup(".axis-minor-tick-mark").setVisible(false);
+
+        formantChart.getYAxis().setTickLabelsVisible(false);
+        formantChart.getYAxis().setTickMarkVisible(false);
+        formantChart.getYAxis().lookup(".axis-minor-tick-mark").setVisible(false);
 
         for (VowelInfo vowel : vowels) {
             XYChart.Series<Number, Number> series = new XYChart.Series<>();
@@ -463,7 +470,6 @@ public class PronunciationExercise extends Application implements AudioProcessor
             Set<Node> nodes = formantChart.lookupAll(".series" + i);
             for (Node n : nodes) {
                 StackPane bubble = (StackPane) n;
-                System.out.println(bubble.getChildren().get(0));
                 Label bubbleLabel = (Label) bubble.getChildren().get(0);
 
                 if (bubbleLabel.getText().equals(String.valueOf(vowel))) {

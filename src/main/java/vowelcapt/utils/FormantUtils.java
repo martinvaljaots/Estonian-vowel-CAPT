@@ -23,7 +23,7 @@ public class FormantUtils {
     private List<VowelInfo> maleVowels = new ArrayList<>();
     private List<VowelInfo> femaleVowels = new ArrayList<>();
     private static List<FormantResults> formantResultsStorage = new ArrayList<>();
-    private Object lock = new Object();
+    private final Object lock = new Object();
 
     public FormantUtils() {
         initializeVowelInfo();
@@ -87,15 +87,14 @@ public class FormantUtils {
             List<Double> secondFormantValues = new ArrayList<>();
 
             while (fs.read(buf)) {
-                System.out.println(Arrays.toString(buf));
+                //TODO: don't sout this, log it
+                //System.out.println(Arrays.toString(buf));
                 firstFormantValues.add(buf[0]);
                 secondFormantValues.add(buf[1]);
             }
 
             double firstFormantAverage = calculateAverageFormantValue(userGender, 1, firstFormantValues, vowel);
             double secondFormantAverage = calculateAverageFormantValue(userGender, 2, secondFormantValues, vowel);
-            System.out.println(firstFormantAverage);
-            System.out.println(secondFormantAverage);
             return new double[]{firstFormantAverage, secondFormantAverage};
 
         } catch (UnsupportedAudioFileException | IOException | MalformedParameterStringException e) {
@@ -123,8 +122,8 @@ public class FormantUtils {
             System.out.println("Vowel: " + vowel + " " + formant + ". formant mean value: " + formantStatisticalMeanValue);
 
             averageFormantValue = formantValues.stream()
-                    .filter(e -> e >= formantStatisticalMeanValue - 250 * formant
-                            && e <= formantStatisticalMeanValue + 250 * formant)
+                    .filter(e -> e >= formantStatisticalMeanValue - 200 * formant
+                            && e <= formantStatisticalMeanValue + 200 * formant)
                     .mapToDouble(e -> e)
                     .average();
         }
