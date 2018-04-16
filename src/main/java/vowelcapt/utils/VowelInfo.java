@@ -8,8 +8,8 @@ public class VowelInfo {
     private double secondFormantMean;
     private double secondFormantSd;
 
-    public VowelInfo(char vowel, double firstFormantMean, double firstFormantSd,
-                     double secondFormantMean, double secondFormantSd) {
+    VowelInfo(char vowel, double firstFormantMean, double firstFormantSd,
+              double secondFormantMean, double secondFormantSd) {
         this.vowel = vowel;
         this.firstFormantMean = firstFormantMean;
         this.firstFormantSd = firstFormantSd;

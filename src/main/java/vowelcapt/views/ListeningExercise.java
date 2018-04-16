@@ -12,8 +12,10 @@ import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import vowelcapt.utils.Account;
+import vowelcapt.utils.AccountUtils;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +35,7 @@ public class ListeningExercise extends Application {
     private String article = "a";
     private Account currentAccount;
     private Stage stage;
+    private AccountUtils accountUtils = new AccountUtils();
 
     @Override
     public void start(Stage primaryStage) {
@@ -124,6 +127,9 @@ public class ListeningExercise extends Application {
             scoreCounter++;
         }
 
+        accountUtils.saveToLog(currentAccount.getUserName(), Collections.singletonList(audioFilesFolder
+                + " question " + questionCounter + "/5: " + message));
+
         Alert resultAlert = new Alert(Alert.AlertType.INFORMATION);
         resultAlert.setTitle("Question " + questionCounter + "/5");
         resultAlert.setHeaderText(null);
@@ -139,6 +145,8 @@ public class ListeningExercise extends Application {
                     "Question " + questionCounter + "/5:");
             playSoundFile(audioFilesFolder + "/" + currentQuestionFileName);
         } else {
+            accountUtils.saveToLog(currentAccount.getUserName(), Collections.singletonList("Finished, correct answers: "
+                    + scoreCounter + "/5"));
             Alert finishedAlert = new Alert(Alert.AlertType.INFORMATION);
             finishedAlert.setTitle("Exercise finished!");
             finishedAlert.setHeaderText(null);
@@ -158,6 +166,8 @@ public class ListeningExercise extends Application {
 
     public void initializeAndStart(Stage primaryStage, String audioFilesFolder,
                                    List<String> audioFileNames, String mainQuantityDegree, Account account) {
+        accountUtils.saveToLog(account.getUserName(), Collections.singletonList("Moved to " + audioFilesFolder
+                + " listening exercise."));
         this.stage = primaryStage;
         this.audioFilesFolder = audioFilesFolder;
         this.audioFileNames = audioFileNames;

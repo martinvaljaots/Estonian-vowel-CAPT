@@ -12,13 +12,16 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import vowelcapt.utils.Account;
+import vowelcapt.utils.AccountUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ExerciseSelection extends Application {
 
     private Account currentAccount;
+    private AccountUtils accountUtils = new AccountUtils();
 
     @Override
     public void start(Stage primaryStage) {
@@ -44,66 +47,48 @@ public class ExerciseSelection extends Application {
         grid.add(pronunciationExerciseLabel, 0, 3);
 
         Button pronunciationExerciseButton1 = new Button("Pronunciation exercise: a");
-        pronunciationExerciseButton1.setOnAction(e -> {
-            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "taat",
-                    "old man, father", 'a');
-        });
+        pronunciationExerciseButton1.setOnAction(e -> new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "taat",
+                "old man, father", 'a'));
         grid.add(pronunciationExerciseButton1, 0, 4);
 
         Button pronunciationExerciseButton2 = new Button("Pronunciation exercise: e");
-        pronunciationExerciseButton2.setOnAction(e -> {
-            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "sees",
-                    "inside", 'e');
-        });
+        pronunciationExerciseButton2.setOnAction(e -> new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "sees",
+                "inside", 'e'));
         grid.add(pronunciationExerciseButton2, 0, 5);
 
         Button pronunciationExerciseButton3 = new Button("Pronunciation exercise: i");
-        pronunciationExerciseButton3.setOnAction(e -> {
-            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "kiip",
-                    "chip (electronics)", 'i');
-        });
+        pronunciationExerciseButton3.setOnAction(e -> new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "kiip",
+                "chip (electronics)", 'i'));
         grid.add(pronunciationExerciseButton3, 0, 6);
 
         Button pronunciationExerciseButton4 = new Button("Pronunciation exercise: o");
-        pronunciationExerciseButton4.setOnAction(e -> {
-            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "kook",
-                    "cake", 'o');
-        });
+        pronunciationExerciseButton4.setOnAction(e -> new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "kook",
+                "cake", 'o'));
         grid.add(pronunciationExerciseButton4, 0, 7);
 
         Button pronunciationExerciseButton5 = new Button("Pronunciation exercise: u");
-        pronunciationExerciseButton5.setOnAction(e -> {
-            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "puuk",
-                    "tick", 'u');
-        });
+        pronunciationExerciseButton5.setOnAction(e -> new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "puuk",
+                "tick", 'u'));
         grid.add(pronunciationExerciseButton5, 0, 8);
 
         Button pronunciationExerciseButton6 = new Button("Pronunciation exercise: õ");
-        pronunciationExerciseButton6.setOnAction(e -> {
-            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "võõp",
-                    "paint, varnish", 'õ');
-        });
+        pronunciationExerciseButton6.setOnAction(e -> new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "võõp",
+                "paint, varnish", 'õ'));
         grid.add(pronunciationExerciseButton6, 0, 9);
 
         Button pronunciationExerciseButton7 = new Button("Pronunciation exercise: ä");
-        pronunciationExerciseButton7.setOnAction(e -> {
-            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "tääk",
-                    "bayonet", 'ä');
-        });
+        pronunciationExerciseButton7.setOnAction(e -> new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "tääk",
+                "bayonet", 'ä'));
         grid.add(pronunciationExerciseButton7, 0, 10);
 
         Button pronunciationExerciseButton8 = new Button("Pronunciation exercise: ö");
-        pronunciationExerciseButton8.setOnAction(e -> {
-            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "söök",
-                    "food", 'ö');
-        });
+        pronunciationExerciseButton8.setOnAction(e -> new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "söök",
+                "food", 'ö'));
         grid.add(pronunciationExerciseButton8, 0, 11);
 
         Button pronunciationExerciseButton9 = new Button("Pronunciation exercise: ü");
-        pronunciationExerciseButton9.setOnAction(e -> {
-            new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "tüüp",
-                    "type, form", 'ü');
-        });
+        pronunciationExerciseButton9.setOnAction(e -> new PronunciationExercise().initializeAndStart(primaryStage, currentAccount, "tüüp",
+                "type, form", 'ü'));
         grid.add(pronunciationExerciseButton9, 0, 12);
 
         Label listeningExercisesLabel = new Label("Listening exercises:");
@@ -154,9 +139,7 @@ public class ExerciseSelection extends Application {
         grid.add(settingsLabel, 3, 3);
 
         Button thresholdReadjustButton = new Button("Adjust microphone level");
-        thresholdReadjustButton.setOnAction(e -> {
-            new ThresholdSetter().initializeAndStart(primaryStage, currentAccount, false);
-        });
+        thresholdReadjustButton.setOnAction(e -> new ThresholdSetter().initializeAndStart(primaryStage, currentAccount, false));
 
         grid.add(thresholdReadjustButton, 3, 4);
 
@@ -171,7 +154,8 @@ public class ExerciseSelection extends Application {
 
     public void initializeAndStart(Stage primaryStage, Account account) {
         currentAccount = account;
-        System.out.println("Exercise selection screen: " + currentAccount.toString());
+        accountUtils.saveToLog(account.getUserName(), Collections.singletonList("Moved to exercise selection screen: "
+                + currentAccount.toString()));
         start(primaryStage);
     }
 }

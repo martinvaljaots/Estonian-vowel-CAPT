@@ -7,7 +7,6 @@ import be.tarsos.dsp.SilenceDetector;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import com.sun.javafx.charts.Legend;
 import javafx.application.Application;
-import javafx.embed.swing.SwingNode;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -20,7 +19,10 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Font;
@@ -30,16 +32,10 @@ import vowelcapt.utils.helpers.*;
 
 import javax.sound.sampled.*;
 import java.io.*;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
-
-// TODO: remove graph panel from this view entirely once ThresholdSetter is properly implemented
-// TODO: make an AudioProcessor version of this
-// TODO: link the bubble chart to results from the analysis
-// TODO: bubble chart ellipses correctness and checking
-// TODO: make the layout pretty
 
 // Audio processing in this class is partly based on examples from TarsosDSP https://github.com/JorenSix/TarsosDSP
 public class PronunciationExercise extends Application implements AudioProcessor {
@@ -48,7 +44,6 @@ public class PronunciationExercise extends Application implements AudioProcessor
     private final Button playBackButton = new Button("Play back");
     private final Button listenButton = new Button("Listen");
     private final Button quitButton = new Button("Back to exercise selection");
-    private final GraphPanel graphPanel = new GraphPanel(-80);
     private BubbleChart<Number, Number> formantChart;
     private XYChart.Series<Number, Number> userResults = new XYChart.Series<>();
     private FormantUtils formantUtils = new FormantUtils();
@@ -58,16 +53,17 @@ public class PronunciationExercise extends Application implements AudioProcessor
     private Label resultsInfo = new Label(" \n ");
     private SilenceDetector silenceDetector = new SilenceDetector();
     private AccountUtils accountUtils = new AccountUtils();
-    //TODO: remove these before user testing starts
-    private String word = "võõp";
-    private Account currentAccount = new Account("test", "test", "male");
-    private char vowel = 'õ';
-    private String userPath = "resources/accounts/test/";
-    private double threshold = -80;
     private String translation;
+    private String word;
+    private Account currentAccount;
+    private char vowel;
+    private String userPath;
+    private double threshold;
 
     @Override
     public void start(Stage primaryStage) {
+        accountUtils.saveToLog(currentAccount.getUserName(), Collections.singletonList(currentAccount.toString()
+                + " navigated to " + vowel + " pronunciation exercise"));
         primaryStage.setX(100);
         primaryStage.setY(50);
         GridPane grid = new GridPane();
@@ -120,14 +116,6 @@ public class PronunciationExercise extends Application implements AudioProcessor
         recordingInfoHbox.getChildren().add(recordingInfo);
         grid.add(recordingInfoHbox, 0, 5);
 
-        graphPanel.setSize(300, 400);
-        final SwingNode swingNode = new SwingNode();
-        swingNode.setContent(graphPanel);
-
-        Pane pane = new Pane();
-        pane.getChildren().add(swingNode);
-        //grid.add(pane, 4, 5);
-
         listenButton.setOnAction(e -> {
             recordButton.setDisable(true);
             listenButton.setDisable(true);
@@ -145,9 +133,9 @@ public class PronunciationExercise extends Application implements AudioProcessor
 
         recordButton.setOnAction(e -> {
             if (!IsRecording.get()) {
+                accountUtils.saveToLog(currentAccount.getUserName(), Collections.singletonList("Started recording."));
                 WasSoundIntensityAboveThreshold.set(false);
                 IsRecording.set(true);
-                HasPitchBeenDetected.set(false);
                 playBackButton.setDisable(true);
                 quitButton.setDisable(true);
                 recordButton.setText("Stop recording");
@@ -227,13 +215,9 @@ public class PronunciationExercise extends Application implements AudioProcessor
                             double[] formantResults = formantUtils.findFormants(currentAccount.getUserName(),
                                     currentAccount.getGender(), vowel);
                             boolean isWithinStandardDeviation = formantUtils.isWithinStandardDeviation(vowel,
-                                    currentAccount.getGender(), formantResults[0], formantResults[1]);
-                            // TODO: log this
-                            //System.out.println(isWithinStandardDeviation);
+                                    currentAccount, formantResults[0], formantResults[1]);
                             FormantResults results = new FormantResults(formantResults[0], formantResults[1], isWithinStandardDeviation);
                             formantUtils.addLastResults(results);
-                            // TODO: don't save this result but things here should be logged
-                            //accountUtils.saveResult(currentAccount.getUserName(), vowel, false, formantResults);
                         }
                     };
                     Thread captureThread = new Thread(runner);
@@ -242,6 +226,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
                     e1.printStackTrace();
                 }
             } else {
+                accountUtils.saveToLog(currentAccount.getUserName(), Collections.singletonList("Finished recording."));
                 IsRecording.set(false);
                 recordingInfo.setText("Recording finished.");
                 recordButton.setText("Record");
@@ -323,7 +308,11 @@ public class PronunciationExercise extends Application implements AudioProcessor
         });
         formantChart.setOnMouseExited(event -> chartToolTip.hide());
 
-        quitButton.setOnAction(e -> new ExerciseSelection().initializeAndStart(primaryStage, currentAccount));
+        quitButton.setOnAction(e -> {
+            accountUtils.saveToLog(currentAccount.getUserName(), Collections.singletonList("Exited " + vowel
+                    + " pronunciation."));
+            new ExerciseSelection().initializeAndStart(primaryStage, currentAccount);
+        });
         HBox quitButtonHbox = new HBox();
         quitButtonHbox.setAlignment(Pos.CENTER_RIGHT);
         quitButtonHbox.getChildren().add(quitButton);
@@ -351,8 +340,6 @@ public class PronunciationExercise extends Application implements AudioProcessor
     }
 
     private void updateChart(FormantResults results) {
-        // TODO: add logging here, definitely
-        System.out.println(results);
         double firstFormant = results.getFirstFormantAverage();
         double secondFormant = results.getSecondFormantAverage();
         String resultsInfoMessage = "";
@@ -374,6 +361,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
             }
         }
         resultsInfo.setText(resultsInfoMessage);
+        accountUtils.saveToLog(currentAccount.getUserName(), Collections.singletonList(resultsInfoMessage));
 
         userResults.getData().add(new XYChart.Data<>(
                 secondFormant,
@@ -476,8 +464,6 @@ public class PronunciationExercise extends Application implements AudioProcessor
                     n.setStyle("-fx-bubble-fill:  #7fff00aa; "
                             + "-fx-background-color: radial-gradient(center 50% 50%, radius 80%, "
                             + "derive(-fx-bubble-fill,20%), derive(-fx-bubble-fill,-30%));");
-
-                    //TODO: maybe a better color
                 } else {
                     n.setStyle("-fx-bubble-fill:  #ffff00aa; "
                             + "-fx-background-color: radial-gradient(center 50% 50%, radius 80%, "

@@ -4,8 +4,8 @@ import javax.sound.sampled.AudioFormat;
 
 public class AudioUtils {
 
-    /** TODO: where was this method originally found in? + link
-     * This method was originally found in
+    /**
+     * author: www.codejava.net
      */
     public static AudioFormat getAudioFormat() {
         float sampleRate = 22050;

@@ -230,12 +230,12 @@ public class PronunciationExerciseWithPitchHandling extends Application implemen
                             double[] formantResults = formantUtils.findFormants(currentAccount.getUserName(),
                                     currentAccount.getGender(), vowel);
                             boolean isWithinStandardDeviation = formantUtils.isWithinStandardDeviation(vowel,
-                                    currentAccount.getGender(), formantResults[0], formantResults[1]);
+                                    currentAccount, formantResults[0], formantResults[1]);
                             System.out.println(isWithinStandardDeviation);
                             FormantResults results = new FormantResults(formantResults[0], formantResults[1], isWithinStandardDeviation);
                             formantUtils.addLastResults(results);
                             // TODO: don't save this result but things here should be logged
-                            //accountUtils.saveResult(currentAccount.getUserName(), vowel, false, formantResults);
+                            //accountUtils.saveToLog(currentAccount.getUserName(), vowel, false, formantResults);
                         }
                     };
                     Thread captureThread = new Thread(runner);

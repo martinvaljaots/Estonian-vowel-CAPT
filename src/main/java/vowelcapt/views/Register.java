@@ -23,7 +23,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Register extends Application {
@@ -77,7 +77,7 @@ public class Register extends Application {
         Label genderSelectionLabel = new Label("Select gender:");
         grid.add(genderSelectionLabel, 0, 4);
 
-        final ComboBox genderSelect = new ComboBox(FXCollections.observableArrayList("Male", "Female"));
+        final ComboBox genderSelect = new ComboBox<>(FXCollections.observableArrayList("Male", "Female"));
         Tooltip genderToolTip = new Tooltip("Gender is used to evaluate\nyour pronunciation.");
         genderSelect.setTooltip(genderToolTip);
         grid.add(genderSelect, 1, 4);
@@ -128,7 +128,7 @@ public class Register extends Application {
         System.out.println(newUserInfo);
         System.out.println(path.toString());
 
-        List<String> newUserInfoLines = Arrays.asList(newUserInfo);
+        List<String> newUserInfoLines = Collections.singletonList(newUserInfo);
 
         try {
             Files.write(path, newUserInfoLines, Charset.forName("UTF-8"), StandardOpenOption.APPEND);
@@ -137,16 +137,10 @@ public class Register extends Application {
         }
 
         new File("resources/accounts/" + account.getUserName()).mkdirs();
-
-
-    }
-
-    public static void main(String[] args) {
-        launch(args);
-    }
-
-    public void customLauncher(Stage primaryStage, String message) {
-        System.out.println(message);
-        start(primaryStage);
+        try {
+            new File("resources/accounts/" + account.getUserName() + "/log.txt").createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

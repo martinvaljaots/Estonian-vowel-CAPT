@@ -5,10 +5,8 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toList;
@@ -58,7 +56,7 @@ public class AccountUtils {
         System.out.println(threshold);
         System.out.println(path.toString());
 
-        List<String> newThresholdAsLines = Arrays.asList(newThreshold);
+        List<String> newThresholdAsLines = Collections.singletonList(newThreshold);
 
         try {
             Files.write(path, newThresholdAsLines, Charset.forName("UTF-8"));
@@ -67,22 +65,11 @@ public class AccountUtils {
         }
     }
 
-    public void saveResult(String userName, char vowel, boolean best, double[] results) {
-        Path path;
-        if (best) {
-            path = FileSystems.getDefault().getPath("resources/accounts/" + userName + "/" + vowel + "_best.txt");
-        } else {
-            path = FileSystems.getDefault().getPath("resources/accounts/" + userName + "/" + vowel + "_last.txt");
-        }
-
-        String newResult = results[0] + ";" + results[1];
-        System.out.println(Arrays.toString(results));
-        System.out.println(path.toString());
-
-        List<String> newResultAsLines = Arrays.asList(newResult);
+    public synchronized void saveToLog(String userName, List<String> logMessages) {
+        Path path = FileSystems.getDefault().getPath("resources/accounts/" + userName + "/log.txt");
 
         try {
-            Files.write(path, newResultAsLines, Charset.forName("UTF-8"));
+            Files.write(path, logMessages, Charset.forName("UTF-8"), StandardOpenOption.APPEND);
         } catch (IOException e) {
             e.printStackTrace();
         }

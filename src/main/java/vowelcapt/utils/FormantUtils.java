@@ -22,6 +22,7 @@ public class FormantUtils {
 
     private List<VowelInfo> maleVowels = new ArrayList<>();
     private List<VowelInfo> femaleVowels = new ArrayList<>();
+    private AccountUtils accountUtils = new AccountUtils();
     private static List<FormantResults> formantResultsStorage = new ArrayList<>();
     private final Object lock = new Object();
 
@@ -76,25 +77,22 @@ public class FormantUtils {
             AutoCorrelation acf = new SimpleACF(wnd);
             LPCSpectrum lpc = new LPCSpectrum(acf, 22, true);
             Formants fs = new Formants(lpc, as.getSampleRate(), 3);
-            System.out.println(as.getSampleRate());
-            System.out.println(filePath);
-            System.out.println(wnd.getFrameSize());
-            System.out.println(acf);
-            System.out.println(lpc.getFrameSize());
-            System.out.println(fs);
             double[] buf = new double[fs.getFrameSize()];
             List<Double> firstFormantValues = new ArrayList<>();
             List<Double> secondFormantValues = new ArrayList<>();
+            List<String> logMessages = new ArrayList<>();
 
+            logMessages.add("\nFirst, second and third formant raw values");
             while (fs.read(buf)) {
-                //TODO: don't sout this, log it
-                //System.out.println(Arrays.toString(buf));
+                logMessages.add(Arrays.toString(buf));
                 firstFormantValues.add(buf[0]);
                 secondFormantValues.add(buf[1]);
             }
 
-            double firstFormantAverage = calculateAverageFormantValue(userGender, 1, firstFormantValues, vowel);
-            double secondFormantAverage = calculateAverageFormantValue(userGender, 2, secondFormantValues, vowel);
+            accountUtils.saveToLog(userName, logMessages);
+
+            double firstFormantAverage = calculateAverageFormantValue(userName, userGender, 1, firstFormantValues, vowel);
+            double secondFormantAverage = calculateAverageFormantValue(userName, userGender, 2, secondFormantValues, vowel);
             return new double[]{firstFormantAverage, secondFormantAverage};
 
         } catch (UnsupportedAudioFileException | IOException | MalformedParameterStringException e) {
@@ -103,7 +101,7 @@ public class FormantUtils {
         return new double[]{0, 0};
     }
 
-    private double calculateAverageFormantValue(String gender, int formant, List<Double> formantValues, char vowel) {
+    private double calculateAverageFormantValue(String userName, String gender, int formant, List<Double> formantValues, char vowel) {
         List<VowelInfo> vowels;
         if (gender.equals("male")) {
             vowels = maleVowels;
@@ -119,23 +117,34 @@ public class FormantUtils {
                 formantStatisticalMeanValue = vowelInfoOptional.get().getFirstFormantMean();
             } else formantStatisticalMeanValue = vowelInfoOptional.get().getSecondFormantMean();
 
-            System.out.println("Vowel: " + vowel + " " + formant + ". formant mean value: " + formantStatisticalMeanValue);
+            List<String> logMessages = new ArrayList<>();
+            logMessages.add(userName + " " + gender + ": Vowel: " + vowel + " " + formant +
+                    ". formant mean value: " + formantStatisticalMeanValue);
 
-            averageFormantValue = formantValues.stream()
+            List<Double> suitableFormantValues = formantValues.stream()
                     .filter(e -> e >= formantStatisticalMeanValue - 200 * formant
                             && e <= formantStatisticalMeanValue + 200 * formant)
+                    .collect(toList());
+
+            logMessages.add("Suitable values:");
+            logMessages.add(suitableFormantValues.toString());
+
+            averageFormantValue = suitableFormantValues.stream()
                     .mapToDouble(e -> e)
                     .average();
+
+            logMessages.add("average formant value: " + averageFormantValue.toString());
+            accountUtils.saveToLog(userName, logMessages);
         }
 
         return averageFormantValue.isPresent() ? averageFormantValue.getAsDouble() : 0;
     }
 
-    public boolean isWithinStandardDeviation(char vowel, String gender,
+    public boolean isWithinStandardDeviation(char vowel, Account account,
                                              double firstFormantAverageValue, double secondFormantAverageValue) {
         List<VowelInfo> vowels;
         VowelInfo vowelInfo;
-        if (gender.equals("male")) {
+        if (account.getGender().equals("male")) {
             vowels = maleVowels;
         } else vowels = femaleVowels;
 
@@ -153,14 +162,21 @@ public class FormantUtils {
                     secondFormantAverageValue >= vowelInfo.getSecondFormantMean() - vowelInfo.getSecondFormantSd()
                             && secondFormantAverageValue <= vowelInfo.getSecondFormantMean() + vowelInfo.getSecondFormantSd();
 
-            System.out.println("F1 value: " + firstFormantAverageValue + " is within "
+            List<String> logMessages = new ArrayList<>();
+            logMessages.add(account.getUserName() + " " + account.getGender() + ": F1 value: "
+                    + firstFormantAverageValue + " is within "
                     + vowelInfo.getFirstFormantMean() + " +- " + vowelInfo.getFirstFormantSd() + " : "
                     + isFirstFormantWithinStandardDeviation);
 
-            System.out.println("F2 value: " + secondFormantAverageValue + " is within "
+            logMessages.add(account.getUserName() + " " + account.getGender() + ": F2 value: "
+                    + secondFormantAverageValue + " is within "
                     + vowelInfo.getSecondFormantMean() + " +- " + vowelInfo.getSecondFormantSd() + " : "
                     + isSecondFormantWithinStandardDeviation);
 
+            logMessages.add("is result within standard deviation? " + (isFirstFormantWithinStandardDeviation
+                    && isSecondFormantWithinStandardDeviation));
+
+            accountUtils.saveToLog(account.getUserName(), logMessages);
             return isFirstFormantWithinStandardDeviation && isSecondFormantWithinStandardDeviation;
         }
 
