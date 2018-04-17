@@ -433,8 +433,6 @@ public class PronunciationExercise extends Application implements AudioProcessor
             double extraValue = (vowel.getFirstFormantSd() + vowel.getSecondFormantSd()) / 2;
             extraValue += extraValue / 5;
 
-            System.out.println(vowel.getSecondFormantMean() + " " + vowel.getFirstFormantMean() + " " + extraValue);
-
             series.getData().add(new XYChart.Data<>(
                     vowel.getSecondFormantMean(),
                     vowel.getFirstFormantMean(),
