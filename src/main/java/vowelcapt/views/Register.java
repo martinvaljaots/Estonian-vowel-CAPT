@@ -12,6 +12,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import vowelcapt.utils.account.Account;
 import vowelcapt.utils.account.AccountUtils;
@@ -88,23 +89,32 @@ public class Register extends Application {
         continuationAlert.setContentText("Account registered successfully!\n" +
                 "You will now be guided through adjusting your microphone volume.");
 
-        final Text actiontarget = new Text();
-        grid.add(actiontarget, 1, 6);
+        final Text errorMessage = new Text("\n\n");
+        errorMessage.setTextAlignment(TextAlignment.RIGHT);
+        HBox errorHbox = new HBox();
+        errorHbox.setAlignment(Pos.CENTER_RIGHT);
+        errorHbox.getChildren().add(errorMessage);
+
+        grid.add(errorHbox, 0, 6, 2, 2);
         registerBtn.setOnAction(e -> {
             if (accountUtils.accountExists(userNameField.getText())) {
-                actiontarget.setFill(Color.FIREBRICK);
-                actiontarget.setText("Username already in use!");
+                errorMessage.setFill(Color.FIREBRICK);
+                errorMessage.setText("Username already in use!\n");
             } else if (!passwordField.getText().equals(passwordAgainField.getText())) {
-                actiontarget.setFill(Color.FIREBRICK);
-                actiontarget.setText("Passwords don't match!");
+                errorMessage.setFill(Color.FIREBRICK);
+                errorMessage.setText("Passwords don't match!\n");
             } else if (userNameField.getText().equals("")
                     || passwordField.getText().equals("")
                     || passwordAgainField.getText().equals("")
                     || genderSelect.getValue() == null) {
-                actiontarget.setFill(Color.FIREBRICK);
-                actiontarget.setText("All fields are mandatory!");
+                errorMessage.setFill(Color.FIREBRICK);
+                errorMessage.setText("All fields are mandatory!\n");
+            } else if (!userNameField.getText().matches("^[a-zA-Z0-9_]+$")
+                    || !passwordField.getText().matches("^[a-zA-Z0-9_]+$")) {
+                errorMessage.setFill(Color.FIREBRICK);
+                errorMessage.setText("Username and password cannot\ncontain special characters!");
             } else {
-                actiontarget.setText("");
+                errorMessage.setText("");
                 Account account = new Account(userNameField.getText(), passwordField.getText(),
                         genderSelect.getValue().toString().toLowerCase());
                 registerUser(account);
@@ -114,7 +124,7 @@ public class Register extends Application {
             }
         });
 
-        Scene scene = new Scene(grid, 400, 300);
+        Scene scene = new Scene(grid, 400, 325);
         primaryStage.setTitle("EstonianVowelCAPT - Registration");
         primaryStage.setScene(scene);
         primaryStage.show();

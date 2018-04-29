@@ -6,7 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-// Code taken from a SoundDetector example in TarsosDSP
+/**
+ * Code taken from a SoundDetector example in TarsosDSP:
+ * https://github.com/JorenSix/TarsosDSP/blob/master/src/examples/be/tarsos/dsp/example/SoundDetector.java
+ * Class was modified to not show maximum recorded level.
+ */
+
 public final class GraphPanel extends JPanel {
 
     /**
@@ -67,12 +72,6 @@ public final class GraphPanel extends JPanel {
         g.setColor(Color.ORANGE);
         g.drawLine(0, thresholdYCoordinate, getWidth(), thresholdYCoordinate);
         g.drawString(String.valueOf((int) threshold), 0, thresholdYCoordinate + 15);
-
-
-        int maxYCoordinate = levelToYCoordinate(maxLevel);
-        g.setColor(Color.RED);
-        g.drawLine(0, maxYCoordinate, getWidth(), maxYCoordinate);
-        g.drawString(String.valueOf(((int) (maxLevel * 100)) / 100.0), getWidth() - 40, maxYCoordinate + 15);
 
     }
 

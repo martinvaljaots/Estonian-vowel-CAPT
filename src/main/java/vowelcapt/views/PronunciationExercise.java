@@ -13,7 +13,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.chart.BubbleChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
@@ -35,6 +34,7 @@ import vowelcapt.utils.audio.AudioUtils;
 import vowelcapt.utils.audio.IsRecording;
 import vowelcapt.utils.audio.SilenceDetectorCurrentSPL;
 import vowelcapt.utils.audio.WasSoundIntensityAboveThreshold;
+import vowelcapt.utils.formants.EllipseBubbleChart;
 import vowelcapt.utils.formants.FormantResults;
 import vowelcapt.utils.formants.FormantUtils;
 import vowelcapt.utils.formants.VowelInfo;
@@ -53,7 +53,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
     private final Button playBackButton = new Button("Play back");
     private final Button listenButton = new Button("Listen");
     private final Button quitButton = new Button("Back to exercise selection");
-    private BubbleChart<Number, Number> formantChart;
+    private EllipseBubbleChart<Number, Number> formantChart;
     private XYChart.Series<Number, Number> userResults = new XYChart.Series<>();
     private FormantUtils formantUtils = new FormantUtils();
     private ByteArrayOutputStream out;
@@ -68,6 +68,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
     private char vowel;
     private String userPath;
     private double threshold;
+    private MediaPlayer mediaPlayer;
 
     @Override
     public void start(Stage primaryStage) {
@@ -131,7 +132,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
             recordingInfo.setText("");
             String pronunciationFileLocation = "resources/sample_sounds/pronunciation/" + word + ".wav";
             Media pronunciationFile = new Media(new File(pronunciationFileLocation).toURI().toString());
-            MediaPlayer mediaPlayer = new MediaPlayer(pronunciationFile);
+            mediaPlayer = new MediaPlayer(pronunciationFile);
             mediaPlayer.play();
 
             recordButton.setDisable(false);
@@ -299,6 +300,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
 
         userResults.setName("Your pronunciation of /" + vowel + "/");
         formantChart = setUpFormantChart();
+        formantChart.setUserGender(currentAccount.getGender());
         formantChart.getData().add(userResults);
         setUpNativePronunciationRangesOnChart();
         formantChart.setPrefWidth(800);
@@ -391,7 +393,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
         }
     }
 
-    private BubbleChart<Number, Number> setUpFormantChart() {
+    private EllipseBubbleChart<Number, Number> setUpFormantChart() {
         int xAxisLowerBound = 500;
         int xAxisUpperBound = 3000;
         int yAxisLowerBound = 100;
@@ -407,7 +409,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
         NumberAxis yAxis = new NumberAxis(yAxisUpperBound, yAxisLowerBound, 100);
         yAxis.setLabel("Tongue low - high");
 
-        return new BubbleChart<>(xAxis, yAxis);
+        return new EllipseBubbleChart<>(xAxis, yAxis);
     }
 
     private void setUpNativePronunciationRangesOnChart() {
@@ -430,7 +432,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
                 series.setName("");
             }
 
-            double extraValue = (vowel.getFirstFormantSd() + vowel.getSecondFormantSd()) / 2;
+            double extraValue = vowel.getFirstFormantSd();
             extraValue += extraValue / 5;
 
             series.getData().add(new XYChart.Data<>(

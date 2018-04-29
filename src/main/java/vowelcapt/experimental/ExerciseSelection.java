@@ -20,6 +20,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * ExerciseSelection class set up to have 3 listening exercises that ended up not being used in the application.
+ */
+
 public class ExerciseSelection extends Application {
 
     private Account currentAccount;
@@ -105,7 +109,7 @@ public class ExerciseSelection extends Application {
             filenames.add("3_2");
             filenames.add("4_2");
             filenames.add("5_2");
-            new ListeningExercise().initializeAndStart(primaryStage, "short_long_overlong", filenames,
+            new ListeningExerciseTwoWords().initializeAndStart(primaryStage, "short_long_overlong", filenames,
                     "long", currentAccount);
         });
         grid.add(listeningExerciseButton1, 1, 4, 2, 1);
@@ -118,7 +122,7 @@ public class ExerciseSelection extends Application {
             filenames.add("3_1");
             filenames.add("4_2");
             filenames.add("5_2");
-            new ListeningExercise().initializeAndStart(primaryStage, "short_overlong", filenames,
+            new ListeningExerciseTwoWords().initializeAndStart(primaryStage, "short_overlong", filenames,
                     "short", currentAccount);
         });
         grid.add(listeningExerciseButton2, 1, 5, 2, 1);
@@ -131,7 +135,7 @@ public class ExerciseSelection extends Application {
             filenames.add("3_1");
             filenames.add("4_2");
             filenames.add("5_1");
-            new ListeningExercise().initializeAndStart(primaryStage, "long_overlong", filenames,
+            new ListeningExerciseTwoWords().initializeAndStart(primaryStage, "long_overlong", filenames,
                     "overlong", currentAccount);
         });
         grid.add(listeningExerciseButton3, 1, 6, 2, 1);

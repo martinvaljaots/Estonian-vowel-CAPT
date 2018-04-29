@@ -38,6 +38,7 @@ public class ThresholdSetter extends Application implements AudioProcessor {
     private AccountUtils accountUtils = new AccountUtils();
     private Account currentAccount;
     private boolean isFirstRegistration;
+    private Button saveButton = new Button();
 
     @Override
     public void start(Stage primaryStage) {
@@ -45,12 +46,23 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(15);
         grid.setVgap(15);
-        grid.setPadding(new Insets(25, 25, 25, 25));
+        grid.setPadding(new Insets(15, 25, 15, 25));
 
-        Label instructionLabel = new Label("Listen to the pronunciation of \"kook\" and try to replicate it.\n" +
-                "Move the slider to change your microphone volume so that only \nthe vowel part \"oo\" lights up as green.\n" +
+        if(isFirstRegistration) {
+            saveButton.setText("Next");
+        } else {
+            saveButton.setText("Save");
+        }
+
+        Label instructionLabel = new Label("Listen to the pronunciation of \"kook\" and then say it.\n" +
+                "Notice how the graph changes color with your pronunciation -\n" +
+                "everything above the yellow line is green, everything below it is yellow.\n\n" +
+                "The yellow line represents the volume.\nThe slider below the graph is for adjusting it.\n" +
+                "Adjust the slider so that your \"k\" pronunciations are yellow\n" +
+                "and your \"oo\" pronunciations are green.\n\n" +
+                "Try this multiple times to make sure the level is set correctly.\n" +
                 "This is necessary for accurately measuring your pronunciations.\n" +
-                "The red bar shows the current highest recorded volume.");
+                "When you are done, click \"" + saveButton.getText() + "\" at the bottom of the screen.");
 
         grid.add(instructionLabel, 0, 0);
 
@@ -95,9 +107,8 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         final AudioFormat format = AudioUtils.getAudioFormat();
         DataLine.Info info = new DataLine.Info(
                 TargetDataLine.class, format);
+
         try {
-
-
             line = (TargetDataLine)
                     AudioSystem.getLine(info);
 
@@ -117,8 +128,6 @@ public class ThresholdSetter extends Application implements AudioProcessor {
 
             new Thread(dispatcher, "Audio dispatching").start();
 
-            Button saveButton = new Button();
-            saveButton.setText("Save");
             saveButton.setOnAction(e -> {
                 Optional<ButtonType> confirmationResult = confirmationAlert.showAndWait();
                 confirmationResult.ifPresent(a -> {
@@ -154,10 +163,10 @@ public class ThresholdSetter extends Application implements AudioProcessor {
         }
 
         Scene scene = new Scene(grid);
-        primaryStage.setTitle("EstonianVowelCAPT");
+        primaryStage.setTitle("EstonianVowelCAPT - Adjust microphone volume");
         primaryStage.setScene(scene);
         primaryStage.setWidth(500);
-        primaryStage.setHeight(625);
+        primaryStage.setHeight(725);
         primaryStage.show();
     }
 

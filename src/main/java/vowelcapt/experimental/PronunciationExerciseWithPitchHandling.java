@@ -43,14 +43,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Audio processing in this class is partly based on examples from TarsosDSP https://github.com/JorenSix/TarsosDSP
+ * Class was moved to this package as pitch detection ended up not being used in the application
+ */
 
-// TODO: remove graph panel from this view entirely once ThresholdSetter is properly implemented
-// TODO: make an AudioProcessor version of this
-// TODO: link the bubble chart to results from the analysis
-// TODO: bubble chart ellipses correctness and checking
-// TODO: make the layout pretty
-
-// Audio processing in this class is partly based on examples from TarsosDSP https://github.com/JorenSix/TarsosDSP
 public class PronunciationExerciseWithPitchHandling extends Application implements PitchDetectionHandler {
 
     private final Button recordButton = new Button("Record");
@@ -67,7 +64,6 @@ public class PronunciationExerciseWithPitchHandling extends Application implemen
     private Label resultsInfo = new Label(" \n ");
     private SilenceDetector silenceDetector = new SilenceDetector();
     private AccountUtils accountUtils = new AccountUtils();
-    //TODO: remove these before user testing starts
     private String word = "võõp";
     private Account currentAccount = new Account("test", "test", "male");
     private char vowel = 'õ';
@@ -240,7 +236,6 @@ public class PronunciationExerciseWithPitchHandling extends Application implemen
                             System.out.println(isWithinStandardDeviation);
                             FormantResults results = new FormantResults(formantResults[0], formantResults[1], isWithinStandardDeviation);
                             formantUtils.addLastResults(results);
-                            // TODO: don't save this result but things here should be logged
                             //accountUtils.saveToLog(currentAccount.getUserName(), vowel, false, formantResults);
                         }
                     };
@@ -394,7 +389,6 @@ public class PronunciationExerciseWithPitchHandling extends Application implemen
         }
     }
 
-    //TODO: remove this main method
     public static void main(String[] args) {
         launch(args);
     }
@@ -483,7 +477,6 @@ public class PronunciationExerciseWithPitchHandling extends Application implemen
                             + "-fx-background-color: radial-gradient(center 50% 50%, radius 80%, "
                             + "derive(-fx-bubble-fill,20%), derive(-fx-bubble-fill,-30%));");
 
-                    //TODO: maybe a better color
                 } else {
                     n.setStyle("-fx-bubble-fill:  #FFFB00aa; "
                             + "-fx-background-color: radial-gradient(center 50% 50%, radius 80%, "

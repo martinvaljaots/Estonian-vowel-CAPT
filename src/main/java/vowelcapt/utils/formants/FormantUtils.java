@@ -156,12 +156,16 @@ public class FormantUtils {
         if (vowelInfoOptional.isPresent()) {
             vowelInfo = vowelInfoOptional.get();
             boolean isFirstFormantWithinStandardDeviation =
-                    firstFormantAverageValue >= vowelInfo.getFirstFormantMean() - vowelInfo.getFirstFormantSd()
-                            && firstFormantAverageValue <= vowelInfo.getFirstFormantMean() + vowelInfo.getFirstFormantSd();
+                    firstFormantAverageValue >= vowelInfo.getFirstFormantMean()
+                            - (vowelInfo.getFirstFormantSd() + vowelInfo.getFirstFormantSd() / 5)
+                            && firstFormantAverageValue <= vowelInfo.getFirstFormantMean()
+                            + (vowelInfo.getFirstFormantSd() + vowelInfo.getFirstFormantSd() / 5);
 
             boolean isSecondFormantWithinStandardDeviation =
-                    secondFormantAverageValue >= vowelInfo.getSecondFormantMean() - vowelInfo.getSecondFormantSd()
-                            && secondFormantAverageValue <= vowelInfo.getSecondFormantMean() + vowelInfo.getSecondFormantSd();
+                    secondFormantAverageValue >= vowelInfo.getSecondFormantMean()
+                            - (vowelInfo.getSecondFormantSd() + vowelInfo.getSecondFormantSd() / 5)
+                            && secondFormantAverageValue <= vowelInfo.getSecondFormantMean()
+                            + (vowelInfo.getSecondFormantSd() + vowelInfo.getSecondFormantSd() / 5);
 
             List<String> logMessages = new ArrayList<>();
             logMessages.add(account.getUserName() + " " + account.getGender() + ": F1 value: "

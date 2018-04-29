@@ -98,12 +98,22 @@ public class ExerciseSelection extends Application {
         Button listeningExerciseButton1 = new Button("Quantity degrees: short, long, overlong");
         listeningExerciseButton1.setOnAction(e -> {
             List<String> filenames = new ArrayList<>();
-            filenames.add("1_1-2-3");
-            filenames.add("2_2-3-1");
-            filenames.add("3_3-2-1");
-            filenames.add("4_1-2-3");
-            filenames.add("5_1-3-2");
-            new ListeningExercise().initializeAndStart(primaryStage, "short_long_overlong", filenames,
+            filenames.add("1_1");
+            filenames.add("1_2");
+            filenames.add("1_3");
+            filenames.add("2_1");
+            filenames.add("2_2");
+            filenames.add("2_3");
+            filenames.add("3_1");
+            filenames.add("3_2");
+            filenames.add("3_3");
+            filenames.add("4_1");
+            filenames.add("4_2");
+            filenames.add("4_3");
+            filenames.add("5_1");
+            filenames.add("5_2");
+            filenames.add("5_3");
+            new ListeningExercise().initializeAndStart(primaryStage, "short_long_overlong_single_words", filenames,
                     currentAccount);
         });
         grid.add(listeningExerciseButton1, 1, 4, 2, 1);
