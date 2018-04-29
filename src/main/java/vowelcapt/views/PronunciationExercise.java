@@ -18,10 +18,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Font;
@@ -58,7 +55,8 @@ public class PronunciationExercise extends Application implements AudioProcessor
     private FormantUtils formantUtils = new FormantUtils();
     private ByteArrayOutputStream out;
     private ByteArrayOutputStream vowelOut;
-    private Label recordingInfo = new Label();
+    private Label recordingInfo = new Label("Click the record button to start recording yourself.\n" +
+            "Then, pronounce the word and click the button again to stop recording.");
     private Label resultsInfo = new Label(" \n ");
     private SilenceDetector silenceDetector = new SilenceDetector();
     private AccountUtils accountUtils = new AccountUtils();
@@ -69,6 +67,9 @@ public class PronunciationExercise extends Application implements AudioProcessor
     private String userPath;
     private double threshold;
     private MediaPlayer mediaPlayer;
+    private int attemptCounter = 0;
+    private String[] attemptsSymbols = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G",
+            "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Y", "Z"};
 
     @Override
     public void start(Stage primaryStage) {
@@ -124,7 +125,9 @@ public class PronunciationExercise extends Application implements AudioProcessor
         HBox recordingInfoHbox = new HBox(0);
         recordingInfoHbox.setAlignment(Pos.CENTER);
         recordingInfoHbox.getChildren().add(recordingInfo);
-        grid.add(recordingInfoHbox, 0, 5);
+        grid.add(recordingInfoHbox, 0, 5, 1, 3);
+
+        recordButton.setStyle("-fx-background-color: red; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14");
 
         listenButton.setOnAction(e -> {
             recordButton.setDisable(true);
@@ -305,9 +308,9 @@ public class PronunciationExercise extends Application implements AudioProcessor
         setUpNativePronunciationRangesOnChart();
         formantChart.setPrefWidth(800);
         Tooltip chartToolTip = new Tooltip("This graph represents your pronunciation.\n" +
+                "After recording, your result will appear here as a red dot.\n" +
                 "The axes describe your tongue position for your pronunciation result.\n" +
                 "The green bubble represents the target area for your pronunciation.\n" +
-                "Native pronunciations are in a smaller area than the green bubble.\n" +
                 "The animation is a guide for how your mouth and tongue should be positioned.\n" +
                 "Try different positions as you pronounce the vowel.");
         chartToolTip.setFont(Font.font(14));
@@ -369,7 +372,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
                             "\nPlease try again and consider adjusting your microphone volume.";
                 }
             } else {
-                resultsInfoMessage = "Your last pronunciation was outside the range of a native speaker. Keep trying.\n " +
+                resultsInfoMessage = "Your last pronunciation was outside the range of a native speaker. Keep trying.\n" +
                         "Position your tongue so that it's closer to the target bubble on the low-high, front-back dimensions.";
             }
         }
@@ -379,18 +382,29 @@ public class PronunciationExercise extends Application implements AudioProcessor
         userResults.getData().add(new XYChart.Data<>(
                 secondFormant,
                 firstFormant,
-                10));
+                20));
 
         setUserResultsColor();
     }
 
     private void setUserResultsColor() {
-        Set<Node> nodes = formantChart.lookupAll(".series0");
-        for (Node n : nodes) {
-            n.setStyle("-fx-bubble-fill:  red; "
-                    + "-fx-background-color: radial-gradient(center 50% 50%, radius 80%, "
-                    + "derive(-fx-bubble-fill,20%), derive(-fx-bubble-fill,-30%));");
+        XYChart.Data<Number, Number> data = userResults.getData().get(attemptCounter);
+        Label label = new Label();
+        if (attemptCounter < attemptsSymbols.length) {
+            label.setText(attemptsSymbols[attemptCounter]);
+        } else {
+            label.setText("..");
         }
+        label.setAlignment(Pos.CENTER);
+        label.setStyle("-fx-text-fill: white; -fx-font-size: 12; -fx-font-weight: bold; -fx-wrap-text: true;");
+        Node bubble = data.getNode();
+        bubble.setStyle("-fx-bubble-fill:  red;"
+                + "-fx-background-color: radial-gradient(center 50% 50%, radius 80%, "
+                + "derive(-fx-bubble-fill,20%), derive(-fx-bubble-fill,-30%));");
+        StackPane region = (StackPane) bubble;
+        region.getChildren().add(label);
+
+        attemptCounter++;
     }
 
     private EllipseBubbleChart<Number, Number> setUpFormantChart() {
