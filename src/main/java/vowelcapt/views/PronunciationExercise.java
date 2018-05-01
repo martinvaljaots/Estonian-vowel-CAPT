@@ -55,8 +55,8 @@ public class PronunciationExercise extends Application implements AudioProcessor
     private FormantUtils formantUtils = new FormantUtils();
     private ByteArrayOutputStream out;
     private ByteArrayOutputStream vowelOut;
-    private Label recordingInfo = new Label("Click the record button to start recording yourself.\n" +
-            "Then, pronounce the word and click the button again to stop recording.");
+    private Label recordingInfo = new Label("Click the record button to start recording your pronunciation.\n" +
+            "Click the button again to stop recording and receive your result.");
     private Label resultsInfo = new Label(" \n ");
     private SilenceDetector silenceDetector = new SilenceDetector();
     private AccountUtils accountUtils = new AccountUtils();
@@ -81,7 +81,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
         grid.setAlignment(Pos.TOP_CENTER);
         grid.setHgap(15);
         grid.setVgap(15);
-        grid.setPadding(new Insets(25, 25, 25, 25));
+        grid.setPadding(new Insets(15, 25, 15, 25));
 
         Label pronounceTheWordLabel = new Label("Listen to the recording and pronounce the word:");
         pronounceTheWordLabel.setFont(Font.font("Arial", 20));
@@ -132,7 +132,9 @@ public class PronunciationExercise extends Application implements AudioProcessor
         listenButton.setOnAction(e -> {
             recordButton.setDisable(true);
             listenButton.setDisable(true);
-            recordingInfo.setText("");
+            if (!recordingInfo.getText().contains("Click the record button to start recording your pronunciation.")) {
+                recordingInfo.setText(" \n ");
+            }
             String pronunciationFileLocation = "resources/sample_sounds/pronunciation/" + word + ".wav";
             Media pronunciationFile = new Media(new File(pronunciationFileLocation).toURI().toString());
             mediaPlayer = new MediaPlayer(pronunciationFile);
@@ -251,7 +253,9 @@ public class PronunciationExercise extends Application implements AudioProcessor
         });
 
         playBackButton.setOnAction(e -> {
-            recordingInfo.setText(" \n ");
+            if (!recordingInfo.getText().contains("Click the record button to start recording your pronunciation.")) {
+                recordingInfo.setText(" \n ");
+            }
             recordButton.setDisable(true);
             listenButton.setDisable(true);
             try {
@@ -393,7 +397,7 @@ public class PronunciationExercise extends Application implements AudioProcessor
         if (attemptCounter < attemptsSymbols.length) {
             label.setText(attemptsSymbols[attemptCounter]);
         } else {
-            label.setText("..");
+            label.setText("...");
         }
         label.setAlignment(Pos.CENTER);
         label.setStyle("-fx-text-fill: white; -fx-font-size: 12; -fx-font-weight: bold; -fx-wrap-text: true;");
